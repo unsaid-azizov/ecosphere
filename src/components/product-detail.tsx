@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, ShoppingCart, Share2, Heart } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ShoppingCart, Share2, Heart, Check, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Lens } from '@/components/magicui/lens';
 import { Product } from '@/types/product';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/contexts/cart-context';
 
 interface ProductDetailProps {
   product: Product;
@@ -18,6 +19,11 @@ interface ProductDetailProps {
 export function ProductDetail({ product }: ProductDetailProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  
+  const { addToCart, isInCart, getItemQuantity, updateQuantity } = useCart();
+  const inCart = isInCart(product.id);
+  const cartQuantity = getItemQuantity(product.id);
   
   // Debug: log product images
   console.log('Product images:', product.images);
@@ -238,13 +244,47 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button 
                   size="lg" 
-                  className="sm:flex-1 bg-gray-900 hover:bg-gray-800 text-white h-12 text-base font-semibold"
-                  onClick={() => {
-                    console.log(`Added ${quantity} items to cart:`, product.name);
+                  disabled={isAddingToCart}
+                  className={cn(
+                    "sm:flex-1 h-12 text-base font-semibold transition-all duration-200",
+                    inCart 
+                      ? "bg-green-600 hover:bg-green-700 text-white" 
+                      : "bg-gray-900 hover:bg-gray-800 text-white"
+                  )}
+                  onClick={async () => {
+                    if (!isAddingToCart) {
+                      setIsAddingToCart(true);
+                      
+                      if (inCart) {
+                        // If already in cart, update quantity
+                        updateQuantity(product.id, cartQuantity + quantity);
+                      } else {
+                        // Add to cart with selected quantity
+                        addToCart({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          images: product.images,
+                          article: product.article,
+                          category: product.category
+                        }, quantity);
+                      }
+                      
+                      // Show feedback animation
+                      setTimeout(() => {
+                        setIsAddingToCart(false);
+                      }, 500);
+                    }
                   }}
                 >
-                  <ShoppingCart className="w-5 h-5 mr-2" />
-                  Добавить в корзину
+                  {isAddingToCart ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  ) : inCart ? (
+                    <Check className="w-5 h-5 mr-2" />
+                  ) : (
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                  )}
+                  {inCart ? `Обновить корзину (${cartQuantity})` : 'Добавить в корзину'}
                 </Button>
                 <div className="flex gap-3 sm:gap-2">
                   <Button 

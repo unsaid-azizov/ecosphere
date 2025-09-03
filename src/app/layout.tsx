@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CartProvider } from "@/contexts/cart-context";
+import { OrdersProvider } from "@/contexts/orders-context";
 
 export const metadata: Metadata = {
   title: "ЭкоСфера - Каталог товаров для гостиниц",
@@ -14,7 +16,11 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="antialiased font-sans">
-        {children}
+        <CartProvider>
+          <OrdersProvider>
+            {children}
+          </OrdersProvider>
+        </CartProvider>
       </body>
     </html>
   );

@@ -7,18 +7,28 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Lens } from '@/components/magicui/lens';
-import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, Check } from 'lucide-react';
 import { Product } from '@/types/product';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/contexts/cart-context';
 
 interface ProductCardProps {
   product: Product;
+  index?: number; // Добавляем индекс для приоритета загрузки
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  
+  // Первые 6 карточек загружаются с высоким приоритетом
+  const isHighPriority = index < 6;
+  
+  const { addToCart, isInCart, getItemQuantity } = useCart();
+  const inCart = isInCart(product.id);
+  const cartQuantity = getItemQuantity(product.id);
 
   // Обработчики переключения изображений
   const nextImage = () => {
@@ -69,23 +79,33 @@ export function ProductCard({ product }: ProductCardProps) {
                     transform: `translateX(-${currentImageIndex * (100 / product.images.length)}%)`,
                   }}
                 >
-                  {product.images.map((image, index) => (
+                  {product.images.map((image, imgIndex) => (
                     <div
-                      key={index}
+                      key={imgIndex}
                       className="relative flex-shrink-0 w-full h-64"
                       style={{ width: `${100 / product.images.length}%` }}
                     >
-                      <Image
-                        src={image || '/placeholder-image.svg'}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-contain transition-all duration-400 ease-in-out"
-                        priority={false}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder-image.svg';
-                        }}
-                      />
+                      {/* Загружаем только видимое изображение + соседние для плавности */}
+                      {(imgIndex === currentImageIndex || 
+                        imgIndex === currentImageIndex - 1 || 
+                        imgIndex === currentImageIndex + 1 ||
+                        (currentImageIndex === 0 && imgIndex === product.images.length - 1) ||
+                        (currentImageIndex === product.images.length - 1 && imgIndex === 0)) && (
+                        <Image
+                          src={image || '/placeholder-image.svg'}
+                          alt={`${product.name} - изображение ${imgIndex + 1}`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-contain transition-all duration-400 ease-in-out"
+                          priority={isHighPriority && imgIndex === 0} // Высокий приоритет только для первого изображения первых карточек
+                          loading={isHighPriority ? 'eager' : 'lazy'}
+                          placeholder="blur"
+                          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjMyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PC9zdmc+"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder-image.svg';
+                          }}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -178,16 +198,43 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 <Button
                   size="sm"
-                  className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-3 py-1 text-xs"
-                  onClick={(e) => {
+                  disabled={isAddingToCart}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs transition-all duration-200",
+                    inCart 
+                      ? "bg-green-600 hover:bg-green-700 text-white" 
+                      : "bg-gray-900 hover:bg-gray-800 text-white"
+                  )}
+                  onClick={async (e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    // TODO: Add to cart logic
-                    console.log('Added to cart:', product.name);
+                    
+                    if (!isAddingToCart) {
+                      setIsAddingToCart(true);
+                      addToCart({
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        images: product.images,
+                        article: product.article,
+                        category: product.category
+                      }, 1);
+                      
+                      // Show feedback animation
+                      setTimeout(() => {
+                        setIsAddingToCart(false);
+                      }, 500);
+                    }
                   }}
                 >
-                  <ShoppingCart className="w-3 h-3 mr-1" />
-                  В корзину
+                  {isAddingToCart ? (
+                    <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-1" />
+                  ) : inCart ? (
+                    <Check className="w-3 h-3 mr-1" />
+                  ) : (
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                  )}
+                  {inCart ? `В корзине (${cartQuantity})` : 'В корзину'}
                 </Button>
               </div>
             </div>
