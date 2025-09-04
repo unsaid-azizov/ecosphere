@@ -57,16 +57,16 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   return (
     <Card
-      className="group overflow-hidden border bg-white shadow-sm hover:shadow-lg transition-all duration-300 w-full max-w-sm cursor-pointer"
+      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-xl hover:shadow-emerald-200/30 hover:border-emerald-300 transition-all duration-300 w-full max-w-sm cursor-pointer hover:-translate-y-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link href={`/product/${product.id}`} tabIndex={-1} className="block focus:outline-none">
         <CardContent className="p-0">
-          <div className="relative w-full h-64 overflow-hidden bg-gray-50">
+          <div className="relative w-full h-60 sm:h-72 overflow-hidden bg-gray-50">
             <Lens zoomFactor={1.5} lensSize={120}>
               <div
-                className="relative w-full h-64"
+                className="relative w-full h-60 sm:h-72"
                 style={{
                   // Для плавной анимации используем translateX
                   overflow: 'hidden',
@@ -82,7 +82,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                   {product.images.map((image, imgIndex) => (
                     <div
                       key={imgIndex}
-                      className="relative flex-shrink-0 w-full h-64"
+                      className="relative flex-shrink-0 w-full h-60 sm:h-72"
                       style={{ width: `${100 / product.images.length}%` }}
                     >
                       {/* Загружаем только видимое изображение + соседние для плавности */}
@@ -170,74 +170,79 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
             <Badge
               variant="secondary"
-              className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm text-gray-700 z-20 shadow-sm border border-gray-200"
+              className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/95 backdrop-blur-sm text-gray-700 z-20 shadow-sm border border-gray-200 text-xs"
             >
               {product.article}
             </Badge>
           </div>
 
-          <div className="p-4 space-y-3">
-            <div className="space-y-1">
-              <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm">
-                {product.name}
-              </h3>
-              <p className="text-xs text-gray-600 line-clamp-1">
-                {product.description}
-              </p>
+          <div className="p-3 sm:p-4 flex flex-col h-full">
+            {/* Цена в верхнем левом углу */}
+            <div className="text-lg sm:text-xl font-bold text-emerald-600 mb-2">
+              ₽{product.price}
             </div>
 
-            <div className="space-y-2">
-              <Badge variant="outline" className="text-xs w-fit max-w-full truncate">
+            {/* Название товара */}
+            <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm mb-1">
+              {product.name}
+            </h3>
+
+            {/* Описание - только на больших экранах */}
+            <p className="text-xs text-gray-600 line-clamp-1 hidden sm:block mb-2">
+              {product.description}
+            </p>
+
+            {/* Badges */}
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <Badge variant="outline" className="hidden sm:inline-flex text-xs w-fit max-w-full truncate">
                 {product.category.length > 20 ? `${product.category.substring(0, 20)}...` : product.category}
               </Badge>
-
-              <div className="flex items-center justify-between">
-                <div className="text-lg font-semibold text-gray-900">
-                  ₽{product.price}
-                </div>
-
-                <Button
-                  size="sm"
-                  disabled={isAddingToCart}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs transition-all duration-200",
-                    inCart 
-                      ? "bg-green-600 hover:bg-green-700 text-white" 
-                      : "bg-gray-900 hover:bg-gray-800 text-white"
-                  )}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    
-                    if (!isAddingToCart) {
-                      setIsAddingToCart(true);
-                      addToCart({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        images: product.images,
-                        article: product.article,
-                        category: product.category
-                      }, 1);
-                      
-                      // Show feedback animation
-                      setTimeout(() => {
-                        setIsAddingToCart(false);
-                      }, 500);
-                    }
-                  }}
-                >
-                  {isAddingToCart ? (
-                    <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-1" />
-                  ) : inCart ? (
-                    <Check className="w-3 h-3 mr-1" />
-                  ) : (
-                    <ShoppingCart className="w-3 h-3 mr-1" />
-                  )}
-                  {inCart ? `В корзине (${cartQuantity})` : 'В корзину'}
-                </Button>
-              </div>
             </div>
+
+            {/* Заполнитель для выравнивания кнопки вниз */}
+            <div className="flex-grow"></div>
+
+            {/* Кнопка на всю ширину внизу */}
+            <Button
+              size="default" 
+              disabled={isAddingToCart}
+              className={cn(
+                "w-full rounded-xl py-3 text-sm font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] mt-auto",
+                inCart 
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border border-emerald-400 shadow-emerald-200" 
+                  : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-emerald-200 hover:shadow-emerald-300"
+              )}
+              onClick={async (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                
+                if (!isAddingToCart) {
+                  setIsAddingToCart(true);
+                  addToCart({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    images: product.images,
+                    article: product.article,
+                    category: product.category
+                  }, 1);
+                  
+                  // Show feedback animation
+                  setTimeout(() => {
+                    setIsAddingToCart(false);
+                  }, 500);
+                }
+              }}
+            >
+              {isAddingToCart ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+              ) : inCart ? (
+                <Check className="w-4 h-4 mr-2" />
+              ) : (
+                <ShoppingCart className="w-4 h-4 mr-2" />
+              )}
+              {inCart ? `В корзине (${cartQuantity})` : 'В корзину'}
+            </Button>
           </div>
         </CardContent>
       </Link>

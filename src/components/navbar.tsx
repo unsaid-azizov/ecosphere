@@ -27,15 +27,15 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-white via-emerald-50/30 to-sky-50/30 border-b border-emerald-100/50 sticky top-0 z-50 backdrop-blur-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-sky-600 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg transition-shadow duration-200">
               <span className="text-white font-bold text-sm">Э</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">ЭкоСфера</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-sky-700 bg-clip-text text-transparent">ЭкоСфера</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -44,7 +44,7 @@ export function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                className="text-gray-600 hover:text-sky-700 px-3 py-2 text-sm font-medium transition-colors"
               >
                 {item.name}
               </Link>
@@ -85,7 +85,7 @@ export function Navbar() {
                 
                 <DropdownMenuItem asChild>
                   <a href="https://t.me/+79812808585" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 py-3">
-                    <MessageCircle className="w-4 h-4 text-blue-500" />
+                    <MessageCircle className="w-4 h-4 text-sky-500" />
                     <div>
                       <div className="font-medium">Telegram</div>
                       <div className="text-xs text-gray-600">Написать в мессенджер</div>
@@ -97,7 +97,7 @@ export function Navbar() {
                 
                 <DropdownMenuItem asChild>
                   <a href="mailto:info@ecosphere.su" className="flex items-center space-x-3 py-3">
-                    <Mail className="w-4 h-4 text-blue-600" />
+                    <Mail className="w-4 h-4 text-sky-600" />
                     <div>
                       <div className="font-medium">info@ecosphere.su</div>
                       <div className="text-xs text-gray-600">Отправить email</div>
@@ -121,25 +121,24 @@ export function Navbar() {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Search Button */}
-            <Button variant="ghost" size="sm" className="hidden sm:flex">
+            <Button variant="ghost" size="sm" className="hidden sm:flex hover:scale-110 transition-transform duration-200">
               <Search className="w-4 h-4" />
             </Button>
 
             {/* History/Orders */}
             <Link href="/orders">
-              <Button variant="ghost" size="sm" className="relative">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200">
                 <History className="w-4 h-4" />
               </Button>
             </Link>
 
             {/* Cart */}
             <Link href="/cart">
-              <Button variant="ghost" size="sm" className="relative">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200">
                 <ShoppingCart className="w-4 h-4" />
                 {cart.totalItems > 0 && (
                   <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-semibold"
+                    className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 shadow-lg animate-pulse"
                   >
                     {cart.totalItems > 99 ? '99+' : cart.totalItems}
                   </Badge>
@@ -164,12 +163,12 @@ export function Navbar() {
           "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
           isMenuOpen ? "max-h-96 pb-4" : "max-h-0"
         )}>
-          <div className="pt-4 space-y-2">
+          <div className="pt-4 space-y-2 animate-in slide-in-from-top-2 duration-300">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.name}
@@ -195,10 +194,10 @@ export function Navbar() {
                 href="https://wa.me/79812808585?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%9C%D0%B5%D0%BD%D1%8F%20%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B5%D1%82..." 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <MessageCircle className="w-4 h-4 text-green-500" />
+                <MessageCircle className="w-4 h-4 text-emerald-500" />
                 <span className="text-base font-medium">WhatsApp</span>
               </a>
               
@@ -206,19 +205,19 @@ export function Navbar() {
                 href="https://t.me/+79812808585" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <MessageCircle className="w-4 h-4 text-blue-500" />
+                <MessageCircle className="w-4 h-4 text-sky-500" />
                 <span className="text-base font-medium">Telegram</span>
               </a>
               
               <a 
                 href="mailto:info@ecosphere.su" 
-                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Mail className="w-4 h-4 text-blue-600" />
+                <Mail className="w-4 h-4 text-sky-600" />
                 <span className="text-base font-medium">info@ecosphere.su</span>
               </a>
               
