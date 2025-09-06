@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { CartItem } from '@/components/cart-item';
+import { CheckoutDialog } from '@/components/checkout-dialog';
 
 export function CartClient() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -98,11 +99,11 @@ export function CartClient() {
                 <span>₽{cart.totalPrice.toLocaleString()}</span>
               </div>
 
-              <Link href="/checkout">
-                <Button size="lg" className="w-full bg-gray-900 hover:bg-gray-800">
+              <CheckoutDialog>
+                <Button size="lg" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
                   Оформить заказ
                 </Button>
-              </Link>
+              </CheckoutDialog>
               
               <Link href="/catalog">
                 <Button variant="outline" size="lg" className="w-full">

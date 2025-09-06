@@ -11,6 +11,8 @@ import { ChevronLeft, ChevronRight, ShoppingCart, Check } from 'lucide-react';
 import { Product } from '@/types/product';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/cart-context';
+import { ProductPrice } from '@/components/product-price';
+import { FavoriteButton } from '@/components/favorite-button';
 
 interface ProductCardProps {
   product: Product;
@@ -57,12 +59,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   return (
     <Card
-      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-xl hover:shadow-emerald-200/30 hover:border-emerald-300 transition-all duration-300 w-full max-w-sm cursor-pointer hover:-translate-y-2"
+      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-xl hover:shadow-emerald-200/30 hover:border-emerald-300 transition-all duration-300 w-full max-w-sm hover:-translate-y-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/product/${product.id}`} tabIndex={-1} className="block focus:outline-none">
-        <CardContent className="p-0">
+      <CardContent className="p-0">
           <div className="relative w-full h-60 sm:h-72 overflow-hidden bg-gray-50">
             <Lens zoomFactor={1.5} lensSize={120}>
               <div
@@ -174,17 +175,35 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             >
               {product.article}
             </Badge>
+            
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
+              <FavoriteButton 
+                productId={product.id} 
+                size="sm"
+                className="bg-white/95 backdrop-blur-sm hover:bg-white shadow-sm"
+              />
+            </div>
           </div>
 
           <div className="p-3 sm:p-4 flex flex-col h-full">
             {/* Цена в верхнем левом углу */}
-            <div className="text-lg sm:text-xl font-bold text-emerald-600 mb-2">
-              ₽{product.price}
+            <div className="mb-2">
+              <ProductPrice 
+                productId={product.id}
+                originalPrice={product.price}
+                className="text-lg sm:text-xl"
+                showSavings={false}
+              />
             </div>
 
             {/* Название товара */}
             <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm mb-1">
-              {product.name}
+              <Link 
+                href={`/product/${product.id}`} 
+                className="hover:text-emerald-600 transition-colors duration-200 cursor-pointer"
+              >
+                {product.name}
+              </Link>
             </h3>
 
             {/* Описание - только на больших экранах */}
@@ -245,7 +264,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </Button>
           </div>
         </CardContent>
-      </Link>
     </Card>
   );
 }

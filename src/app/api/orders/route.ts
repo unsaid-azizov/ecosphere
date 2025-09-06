@@ -1,94 +1,125 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { getProducts } from '@/lib/data-client'
 
+// GET - получить заказы пользователя
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Требуется авторизация' },
+        { status: 401 }
+      )
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: session.user.id
+      },
+      include: {
+        orderItems: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    return NextResponse.json(orders)
+  } catch (error) {
+    console.error('Ошибка получения заказов:', error)
+    return NextResponse.json(
+      { error: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - создать новый заказ
 export async function POST(request: NextRequest) {
   try {
-    const orderData = await request.json();
+    const session = await getServerSession(authOptions)
     
-    // Validate required fields
-    if (!orderData.customer.contactPerson || !orderData.customer.phone || !orderData.customer.email) {
+    if (!session?.user) {
       return NextResponse.json(
-        { error: 'Missing required customer information' },
-        { status: 400 }
-      );
+        { error: 'Требуется авторизация' },
+        { status: 401 }
+      )
     }
 
-    if (!orderData.items || orderData.items.length === 0) {
+    const body = await request.json()
+    const { contactEmail, contactPhone, deliveryAddress, items } = body
+
+    if (!contactEmail || !items || items.length === 0) {
       return NextResponse.json(
-        { error: 'No items in order' },
+        { error: 'Отсутствуют обязательные поля' },
         { status: 400 }
-      );
+      )
     }
 
-    // Format order for email
-    const orderText = formatOrderForEmail(orderData);
-    
-    // Here you would normally send email
-    // For now, we'll just log and return success
-    console.log('Order received:', orderText);
-    
-    // Generate order ID
-    const orderId = Date.now().toString();
-    
-    return NextResponse.json({
-      success: true,
-      orderId,
-      message: 'Order submitted successfully'
-    });
-    
+    // Получаем данные о товарах
+    const products = getProducts()
+    const totalAmount = items.reduce((sum: number, item: any) => {
+      const product = products.find(p => p.id === item.productId)
+      return sum + (product ? product.price * item.quantity : 0)
+    }, 0)
+
+    // Генерируем номер заказа
+    const orderNumber = `ORD-${Date.now()}`
+
+    // Создаем заказ в транзакции
+    const order = await prisma.$transaction(async (tx) => {
+      // Создаем заказ
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          userId: session.user.id,
+          totalAmount,
+          contactEmail,
+          contactPhone: contactPhone || null,
+          deliveryAddress: deliveryAddress || null,
+        }
+      })
+
+      // Добавляем товары в заказ
+      const orderItems = await Promise.all(
+        items.map((item: any) => {
+          const product = products.find(p => p.id === item.productId)
+          if (!product) throw new Error(`Товар ${item.productId} не найден`)
+
+          return tx.orderItem.create({
+            data: {
+              orderId: newOrder.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              price: product.price,
+              productName: product.name,
+              productCategory: product.category,
+              productArticle: product.article,
+            }
+          })
+        })
+      )
+
+      // Очищаем корзину пользователя
+      await tx.cartItem.deleteMany({
+        where: {
+          userId: session.user.id
+        }
+      })
+
+      return { ...newOrder, orderItems }
+    })
+
+    return NextResponse.json(order, { status: 201 })
   } catch (error) {
-    console.error('Order processing error:', error);
+    console.error('Ошибка создания заказа:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Внутренняя ошибка сервера' },
       { status: 500 }
-    );
-  }
-}
-
-function formatOrderForEmail(orderData: any): string {
-  const { customer, items, totalAmount, totalItems } = orderData;
-  
-  let emailText = `🛒 НОВЫЙ ЗАКАЗ #${Date.now()}\n\n`;
-  
-  // Customer info
-  emailText += `👤 ЗАКАЗЧИК:\n`;
-  emailText += `Тип: ${getCompanyTypeLabel(customer.companyType)}\n`;
-  if (customer.companyName) {
-    emailText += `Компания: ${customer.companyName}\n`;
-  }
-  if (customer.inn) {
-    emailText += `ИНН: ${customer.inn}\n`;
-  }
-  emailText += `Контактное лицо: ${customer.contactPerson}\n`;
-  emailText += `Телефон: ${customer.phone}\n`;
-  emailText += `Email: ${customer.email}\n`;
-  if (customer.address) {
-    emailText += `Адрес: ${customer.address}\n`;
-  }
-  
-  // Order items
-  emailText += `\n📦 ТОВАРЫ (${totalItems} шт.):\n`;
-  items.forEach((item: any, index: number) => {
-    emailText += `${index + 1}. ${item.name}\n`;
-    emailText += `   Артикул: ${item.article}\n`;
-    emailText += `   Цена: ₽${item.price.toLocaleString()} × ${item.quantity} шт. = ₽${item.total.toLocaleString()}\n\n`;
-  });
-  
-  emailText += `💰 ИТОГО: ₽${totalAmount.toLocaleString()}\n`;
-  
-  if (customer.comment) {
-    emailText += `\n💬 КОММЕНТАРИЙ:\n${customer.comment}\n`;
-  }
-  
-  emailText += `\n📅 Дата заказа: ${new Date(orderData.createdAt).toLocaleString('ru-RU')}\n`;
-  
-  return emailText;
-}
-
-function getCompanyTypeLabel(type: string): string {
-  switch (type) {
-    case 'individual': return 'Физическое лицо';
-    case 'ip': return 'Индивидуальный предприниматель';
-    case 'ooo': return 'Общество с ограниченной ответственностью';
-    default: return 'Не указано';
+    )
   }
 }

@@ -1,234 +1,222 @@
 'use client';
 
-import { useOrders } from '@/contexts/orders-context';
-import { useCart } from '@/contexts/cart-context';
-import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+// Убрали импорт Navbar - он уже есть в родительском компоненте
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, Trash2, ShoppingBag, RefreshCw, Calendar, User, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Package, Calendar, Mail, Phone, MapPin, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
-import { Order } from '@/types/order';
+
+interface OrderItem {
+  id: string
+  productId: string
+  quantity: number
+  price: number
+  productName: string
+  productCategory: string
+  productArticle: string
+}
+
+interface Order {
+  id: string
+  orderNumber: string
+  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
+  totalAmount: number
+  createdAt: string
+  contactEmail: string
+  contactPhone?: string
+  deliveryAddress?: string
+  orderItems: OrderItem[]
+}
+
+const statusLabels = {
+  PENDING: 'Ожидает обработки',
+  CONFIRMED: 'Подтвержден',
+  PROCESSING: 'В обработке',
+  SHIPPED: 'Отправлен',
+  DELIVERED: 'Доставлен',
+  CANCELLED: 'Отменен'
+}
+
+const statusColors = {
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  CONFIRMED: 'bg-blue-100 text-blue-800',
+  PROCESSING: 'bg-purple-100 text-purple-800',
+  SHIPPED: 'bg-orange-100 text-orange-800',
+  DELIVERED: 'bg-green-100 text-green-800',
+  CANCELLED: 'bg-red-100 text-red-800'
+}
 
 export function OrdersClient() {
-  const { orders, sendOrder, deleteOrder, clearHistory } = useOrders();
-  const { clearCart } = useCart();
-  
-  console.log('OrdersClient rendered with orders:', orders);
-  console.log('Orders length:', orders.length);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleResendOrder = (orderId: string) => {
-    const success = sendOrder(orderId);
-    if (success) {
-      alert('Почтовый клиент открыт с письмом для повторной отправки!');
-    } else {
-      alert('Не удалось открыть почтовый клиент. Проверьте настройки браузера.');
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/');
+    } else if (status === 'authenticated') {
+      loadOrders();
+    }
+  }, [status, router]);
+
+  const loadOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        const ordersData = await response.json();
+        setOrders(ordersData);
+      } else {
+        console.error('Ошибка загрузки заказов');
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки заказов:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    if (confirm('Вы уверены, что хотите удалить этот заказ из истории?')) {
-      deleteOrder(orderId);
-    }
-  };
-
-  const getStatusBadge = (order: Order) => {
-    switch (order.status) {
-      case 'draft':
-        return <Badge variant="outline" className="text-gray-600">Черновик</Badge>;
-      case 'sent':
-        return <Badge variant="default" className="bg-blue-600">Отправлен</Badge>;
-      case 'confirmed':
-        return <Badge variant="default" className="bg-green-600">Подтвержден</Badge>;
-      case 'processing':
-        return <Badge variant="default" className="bg-yellow-600">В обработке</Badge>;
-      case 'completed':
-        return <Badge variant="default" className="bg-green-700">Выполнен</Badge>;
-      default:
-        return <Badge variant="outline">Неизвестно</Badge>;
-    }
-  };
-
-  if (orders.length === 0) {
+  if (status === 'loading' || loading) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center py-16">
-          <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-            <ShoppingBag className="w-12 h-12 text-gray-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            История заказов пуста
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Здесь будут отображаться все ваши заказы после их создания
-          </p>
-          <Link href="/catalog">
-            <Button size="lg" className="bg-gray-900 hover:bg-gray-800">
-              <Package className="w-4 h-4 mr-2" />
-              Перейти к каталогу
-            </Button>
-          </Link>
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <div className="w-8 h-8 border-4 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin" />
       </div>
     );
   }
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <Link href="/catalog" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          К каталогу
-        </Link>
-        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Мои заказы</h1>
-            <p className="text-gray-600 mt-1">
-              История всех ваших заказов ({orders.length})
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => clearCart()}
-              className="text-red-600 hover:text-red-700 text-sm"
-              size="sm"
-            >
-              Очистить корзину
-            </Button>
-            {orders.length > 0 && (
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  if (confirm('Вы уверены, что хотите удалить всю историю заказов?')) {
-                    clearHistory();
-                  }
-                }}
-                className="text-red-600 hover:text-red-700 text-sm"
-                size="sm"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Очистить историю
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+  if (!session) {
+    return null;
+  }
 
-      <div className="space-y-6">
-        {orders.map((order) => (
-          <Card key={order.id} className="overflow-hidden">
-            <CardHeader className="bg-gray-50">
-              <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
-                <div className="flex-1">
-                  <CardTitle className="text-base sm:text-lg">Заказ #{order.id}</CardTitle>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-sm text-gray-600 mt-1">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{order.createdAt.toLocaleDateString('ru-RU')}</span>
+  return (
+    <div className="space-y-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Package className="w-8 h-8 text-emerald-600" />
+            <h1 className="text-3xl font-bold text-gray-900">
+              Мои заказы
+            </h1>
+          </div>
+          <p className="text-gray-600">
+            {orders.length > 0 
+              ? `У вас ${orders.length} заказ${orders.length > 4 ? 'ов' : orders.length === 1 ? '' : 'а'}`
+              : 'У вас пока нет заказов'
+            }
+          </p>
+        </div>
+
+        {orders.length > 0 ? (
+          <div className="space-y-6">
+            {orders.map((order, index) => (
+              <Card key={order.id} className="border-0 shadow-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-300" style={{ animationDelay: `${index * 100}ms` }}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-100 rounded-lg">
+                        <Package className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">
+                          Заказ {order.orderNumber}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(order.createdAt).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <User className="w-4 h-4" />
-                      <span className="truncate max-w-[120px] sm:max-w-none">{order.customer.contactPerson}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Package className="w-4 h-4" />
-                      <span>{order.totalItems} {order.totalItems === 1 ? 'товар' : order.totalItems < 5 ? 'товара' : 'товаров'}</span>
+                    <div className="text-right">
+                      <Badge className={`${statusColors[order.status]} mb-2`}>
+                        {statusLabels[order.status]}
+                      </Badge>
+                      <div className="text-lg font-bold text-emerald-600">
+                        ₽{order.totalAmount.toLocaleString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                  {getStatusBadge(order)}
-                  {order.sentCount > 0 && (
-                    <Badge variant="outline" className="text-blue-600 text-xs">
-                      Отправлен {order.sentCount} раз
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="p-6">
-              {/* Customer Info */}
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Заказчик:</h4>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <div><strong>Тип:</strong> {order.customer.companyType === 'individual' ? 'Физ. лицо' : order.customer.companyType === 'ip' ? 'ИП' : 'ООО'}</div>
-                  {order.customer.companyName && <div><strong>Компания:</strong> {order.customer.companyName}</div>}
-                  {order.customer.inn && <div><strong>ИНН:</strong> {order.customer.inn}</div>}
-                  <div><strong>Контакт:</strong> {order.customer.contactPerson}</div>
-                  <div><strong>Телефон:</strong> {order.customer.phone}</div>
-                  <div><strong>Email:</strong> {order.customer.email}</div>
-                  {order.customer.address && <div><strong>Адрес:</strong> {order.customer.address}</div>}
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Товары:</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {order.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
-                      <div className="flex-1">
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-gray-600">Артикул: {item.article}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">₽{item.total.toLocaleString()}</div>
-                        <div className="text-gray-600">{item.quantity} × ₽{item.price.toLocaleString()}</div>
-                      </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Товары в заказе */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Товары ({order.orderItems.length})</h4>
+                    <div className="space-y-2">
+                      {order.orderItems.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{item.productName}</p>
+                            <p className="text-sm text-gray-600">Артикул: {item.productArticle}</p>
+                          </div>
+                          <div className="flex items-center gap-4 text-right">
+                            <span className="text-sm text-gray-600">{item.quantity} шт</span>
+                            <span className="font-medium">₽{(item.price * item.quantity).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              {/* Total and Actions */}
-              <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-center sm:space-y-0 pt-4 border-t">
-                <div className="text-lg font-semibold">
-                  Итого: ₽{order.totalAmount.toLocaleString()}
-                </div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleResendOrder(order.id)}
-                    className="text-blue-600 hover:text-blue-700 w-full sm:w-auto"
-                  >
-                    <Send className="w-4 h-4 mr-1" />
-                    <span className="sm:hidden">
-                      {order.sentCount > 0 ? 'Повторно' : 'Отправить'}
-                    </span>
-                    <span className="hidden sm:inline">
-                      {order.sentCount > 0 ? 'Отправить повторно' : 'Отправить'}
-                    </span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteOrder(order.id)}
-                    className="text-red-600 hover:text-red-700 w-full sm:w-auto"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Удалить
-                  </Button>
-                </div>
-              </div>
-              
-              {order.lastSentAt && (
-                <div className="text-xs text-gray-500 mt-2">
-                  Последняя отправка: {order.lastSentAt.toLocaleString('ru-RU')}
-                </div>
-              )}
-              
-              {order.customer.comment && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="text-sm font-medium text-blue-900">Комментарий:</div>
-                  <div className="text-sm text-blue-800 mt-1">{order.customer.comment}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  {/* Контактная информация */}
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Контактная информация</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span>{order.contactEmail}</span>
+                      </div>
+                      {order.contactPhone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          <span>{order.contactPhone}</span>
+                        </div>
+                      )}
+                      {order.deliveryAddress && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-400" />
+                          <span>{order.deliveryAddress}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <Package className="w-12 h-12 text-gray-400" />
+            </div>
+            
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+              Пока нет заказов
+            </h2>
+            
+            <p className="text-gray-600 mb-8 max-w-md">
+              Когда вы сделаете первый заказ, он появится здесь. 
+              Начните с просмотра нашего каталога товаров.
+            </p>
+            
+            <Link href="/catalog">
+              <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+                <ShoppingBag className="w-5 h-5 mr-2" />
+                Перейти в каталог
+              </Button>
+            </Link>
+          </div>
+        )}
     </div>
   );
 }

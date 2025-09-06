@@ -6,4 +6,7 @@ export interface Product {
   price: number;
   category: string;
   images: string[];
+  availability?: string; // Для обратной совместимости
+  stockQuantity?: number; // Количество на складе
+  isAvailable?: boolean; // Доступность товара
 }

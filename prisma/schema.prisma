@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  INDIVIDUAL // Физическое лицо
+  IP         // ИП
+  OOO        // ООО/Юридическое лицо
+}
+
+enum OrderStatus {
+  PENDING    // Ожидает обработки
+  CONFIRMED  // Подтвержден
+  PROCESSING // В обработке
+  SHIPPED    // Отправлен
+  DELIVERED  // Доставлен
+  CANCELLED  // Отменен
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  userType  UserType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Физическое лицо
+  firstName String?
+  lastName  String?
+  phone     String?
+
+  // ИП
+  ipName String? // Наименование ИП
+
+  // ООО
+  companyName   String? // Наименование организации
+  legalAddress  String? // Юридический адрес
+
+  // Общие для ИП и ООО
+  inn String? // ИНН
+  kpp String? // КПП (для ООО)
+
+  // Скидки и специальные цены
+  discountPercent Int     @default(0) // Процент скидки
+  isVip           Boolean @default(false) // VIP статус
+  specialPrices   UserSpecialPrice[] // Персональные цены на товары
+
+  // Связи
+  orders        Order[]
+  favorites     Favorite[]
+  cartItems     CartItem[]
+  loyaltyPoints Int        @default(0) // Баллы лояльности
+
+  @@map("users")
+}
+
+model UserSpecialPrice {
+  id        String @id @default(cuid())
+  userId    String
+  productId String // ID товара из CSV
+  price     Float  // Специальная цена
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("user_special_prices")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique // Номер заказа для пользователя
+  userId      String
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Контактная информация
+  contactEmail String
+  contactPhone String?
+  deliveryAddress String?
+
+  // Связи
+  user      User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String // ID товара из CSV
+  quantity  Int
+  price     Float // Цена на момент заказа
+  createdAt DateTime @default(now())
+
+  // Информация о товаре на момент заказа
+  productName     String
+  productCategory String
+  productArticle  String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String   // ID товара из CSV
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("favorites")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String   // ID товара из CSV
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+// Модель для хранения инвентаря товаров
+model ProductInventory {
+  id            String   @id @default(cuid())
+  productId     String   @unique // ID товара из CSV
+  stockQuantity Int      @default(0)
+  minStock      Int      @default(5) // Минимальный остаток
+  maxStock      Int      @default(100) // Максимальный остаток
+  updatedAt     DateTime @updatedAt
+
+  @@map("product_inventory")
+}
+
+// Модель для скидок на товары
+model ProductDiscount {
+  id          String   @id @default(cuid())
+  productId   String   @unique // ID товара из CSV
+  discountPercent Int  // Процент скидки
+  validFrom   DateTime @default(now())
+  validUntil  DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("product_discounts")
+}
+
+// Модель для хранения товаров в базе данных
+model Product {
+  id          String   @id // Артикул товара
+  name        String   // Название товара
+  description String?  // Описание товара
+  price       Float    // Цена
+  category    String   // Категория
+  images      String[] // Массив ссылок на изображения
+  article     String   // Артикул (может отличаться от id)
+  
+  // Количество в наличии
+  stockQuantity Int      @default(0)
+  isAvailable   Boolean  @default(true)
+  
+  // Метаданные
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("products")
+}

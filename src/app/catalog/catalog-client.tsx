@@ -3,25 +3,50 @@
 import { CatalogFilters } from '@/components/catalog-filters';
 import { ProductCard } from '@/components/product-card';
 import { useProducts } from '@/hooks/use-products';
-import { Product } from '@/types/product';
 
-interface CatalogClientProps {
-  initialProducts: Product[];
-  categories: string[];
-  priceRange: { min: number; max: number };
-}
-
-export function CatalogClient({ 
-  initialProducts, 
-  categories, 
-  priceRange 
-}: CatalogClientProps) {
+export function CatalogClient() {
   const {
     products,
     filteredProducts,
     filters,
-    setFilters
-  } = useProducts({ initialProducts });
+    setFilters,
+    categories,
+    priceRange,
+    loading,
+    error
+  } = useProducts();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          <p className="mt-4 text-gray-600">Загрузка товаров...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-red-500 mb-4">
+          <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Ошибка загрузки</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+        >
+          Попробовать снова
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

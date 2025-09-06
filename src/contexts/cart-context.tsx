@@ -1,191 +1,319 @@
 'use client';
 
 import { createContext, useContext, useReducer, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { CartItem, Cart, CartContextType } from '@/types/cart';
-import { getProducts } from '@/lib/data';
+// Убрали импорт data-client, будем получать товары через API
 
 // Cart reducer actions
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: { productId: string; quantity: number } }
+  | { type: 'SET_CART'; payload: Cart }
+  | { type: 'ADD_ITEM'; payload: CartItem }
+  | { type: 'UPDATE_ITEM'; payload: CartItem }
   | { type: 'REMOVE_ITEM'; payload: { productId: string } }
-  | { type: 'UPDATE_QUANTITY'; payload: { productId: string; quantity: number } }
   | { type: 'CLEAR_CART' }
-  | { type: 'LOAD_CART'; payload: Cart };
+  | { type: 'SET_LOADING'; payload: boolean };
 
-const cartReducer = (state: Cart, action: CartAction): Cart => {
+interface CartState extends Cart {
+  loading: boolean;
+  syncing: boolean;
+}
+
+const initialState: CartState = {
+  items: [],
+  totalItems: 0,
+  totalPrice: 0,
+  loading: false,
+  syncing: false,
+};
+
+const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
+    case 'SET_CART':
+      return {
+        ...state,
+        items: action.payload.items,
+        totalItems: action.payload.totalItems,
+        totalPrice: action.payload.totalPrice,
+        loading: false,
+      };
+      
     case 'ADD_ITEM': {
-      const { productId, quantity } = action.payload;
-      const existingItem = state.items.find(item => item.id === productId);
+      const existingIndex = state.items.findIndex(item => item.id === action.payload.id);
+      let newItems;
       
-      if (existingItem) {
-        const updatedItems = state.items.map(item =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-        
-        return {
-          ...state,
-          items: updatedItems,
-          totalItems: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-          totalPrice: updatedItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+      if (existingIndex >= 0) {
+        newItems = [...state.items];
+        newItems[existingIndex] = {
+          ...newItems[existingIndex],
+          quantity: newItems[existingIndex].quantity + action.payload.quantity
         };
+      } else {
+        newItems = [...state.items, action.payload];
       }
-      
-      // Need to get product data - this will be handled by the context
-      return state;
-    }
-    
-    case 'REMOVE_ITEM': {
-      const filteredItems = state.items.filter(item => item.id !== action.payload.productId);
       
       return {
         ...state,
-        items: filteredItems,
-        totalItems: filteredItems.reduce((sum, item) => sum + item.quantity, 0),
-        totalPrice: filteredItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+        items: newItems,
+        totalItems: newItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalPrice: newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
       };
     }
     
-    case 'UPDATE_QUANTITY': {
-      const { productId, quantity } = action.payload;
-      
-      if (quantity <= 0) {
-        return cartReducer(state, { type: 'REMOVE_ITEM', payload: { productId } });
-      }
-      
-      const updatedItems = state.items.map(item =>
-        item.id === productId
-          ? { ...item, quantity }
-          : item
+    case 'UPDATE_ITEM': {
+      const newItems = state.items.map(item =>
+        item.id === action.payload.id ? action.payload : item
       );
       
       return {
         ...state,
-        items: updatedItems,
-        totalItems: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-        totalPrice: updatedItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+        items: newItems,
+        totalItems: newItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalPrice: newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+      };
+    }
+    
+    case 'REMOVE_ITEM': {
+      const newItems = state.items.filter(item => item.id !== action.payload.productId);
+      
+      return {
+        ...state,
+        items: newItems,
+        totalItems: newItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalPrice: newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
       };
     }
     
     case 'CLEAR_CART':
       return {
+        ...state,
         items: [],
         totalItems: 0,
-        totalPrice: 0
+        totalPrice: 0,
       };
-    
-    case 'LOAD_CART':
-      return action.payload;
-    
+      
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload,
+      };
+      
     default:
       return state;
   }
 };
 
-const initialCart: Cart = {
-  items: [],
-  totalItems: 0,
-  totalPrice: 0
-};
-
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, dispatch] = useReducer(cartReducer, initialCart);
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { data: session, status } = useSession();
 
-  // Load cart from localStorage on mount
+  // Загружаем корзину из базы данных при входе пользователя
   useEffect(() => {
-    const savedCart = localStorage.getItem('ecosphere-cart');
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        dispatch({ type: 'LOAD_CART', payload: parsedCart });
-      } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
-      }
+    if (status === 'authenticated' && session?.user) {
+      loadCartFromServer();
+    } else if (status === 'unauthenticated') {
+      // Для неавторизованных пользователей загружаем из localStorage
+      loadCartFromLocalStorage();
     }
-  }, []);
+  }, [session, status]);
 
-  // Save cart to localStorage whenever it changes
+  // Сохраняем в localStorage для неавторизованных пользователей
   useEffect(() => {
-    localStorage.setItem('ecosphere-cart', JSON.stringify(cart));
-  }, [cart]);
+    if (status === 'unauthenticated') {
+      localStorage.setItem('cart', JSON.stringify({
+        items: state.items,
+        totalItems: state.totalItems,
+        totalPrice: state.totalPrice,
+      }));
+    }
+  }, [state.items, state.totalItems, state.totalPrice, status]);
 
-  const addToCart = (productData: CartItem['product'], quantity = 1) => {
+  const loadCartFromServer = async () => {
+    if (!session?.user) return;
+    
+    dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const existingItem = cart.items.find(item => item.id === productData.id);
-      
-      if (existingItem) {
+      const response = await fetch('/api/cart');
+      if (response.ok) {
+        const cartItems = await response.json();
+        
+        // Загружаем информацию о товарах для каждого элемента корзины
+        const items: CartItem[] = [];
+        for (const dbItem of cartItems) {
+          try {
+            const productResponse = await fetch(`/api/products/${dbItem.productId}`);
+            if (productResponse.ok) {
+              const product = await productResponse.json();
+              items.push({
+                id: dbItem.productId,
+                product,
+                quantity: dbItem.quantity,
+              });
+            }
+          } catch (error) {
+            console.error(`Ошибка загрузки товара ${dbItem.productId}:`, error);
+          }
+        }
+        
+        const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+        
         dispatch({
-          type: 'UPDATE_QUANTITY',
-          payload: { productId: productData.id, quantity: existingItem.quantity + quantity }
+          type: 'SET_CART',
+          payload: { items, totalItems, totalPrice }
         });
-      } else {
-        const cartItem: CartItem = {
-          id: productData.id,
-          product: productData,
-          quantity,
-          addedAt: new Date()
-        };
-
-        const newItems = [...cart.items, cartItem];
-        const newCart: Cart = {
-          items: newItems,
-          totalItems: newItems.reduce((sum, item) => sum + item.quantity, 0),
-          totalPrice: newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
-        };
-
-        dispatch({ type: 'LOAD_CART', payload: newCart });
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('Ошибка загрузки корзины:', error);
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const removeFromCart = (productId: string) => {
+  const loadCartFromLocalStorage = () => {
+    try {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const cartData = JSON.parse(savedCart);
+        dispatch({ type: 'SET_CART', payload: cartData });
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки корзины из localStorage:', error);
+    }
+  };
+
+  const syncWithServer = async (action: string, data: any) => {
+    if (!session?.user) return;
+    
+    try {
+      const response = await fetch('/api/cart', {
+        method: action === 'add' ? 'POST' : action === 'update' ? 'PUT' : 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        console.error('Ошибка синхронизации с сервером');
+      }
+    } catch (error) {
+      console.error('Ошибка сети при синхронизации:', error);
+    }
+  };
+
+  const addToCart = async (productOrId: string | any, quantity: number = 1) => {
+    try {
+      let product;
+      let productId;
+
+      // Если передан объект товара, используем его
+      if (typeof productOrId === 'object' && productOrId.id) {
+        product = productOrId;
+        productId = productOrId.id;
+      } 
+      // Если передана строка (ID), загружаем товар через API
+      else if (typeof productOrId === 'string') {
+        productId = productOrId;
+        const response = await fetch(`/api/products/${productId}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.error('Товар не найден:', productId);
+            return;
+          }
+          throw new Error('Не удалось загрузить информацию о товаре');
+        }
+        product = await response.json();
+      } else {
+        console.error('Неверный формат данных товара');
+        return;
+      }
+
+    const cartItem: CartItem = {
+      id: productId,
+      product,
+      quantity,
+    };
+
+      dispatch({ type: 'ADD_ITEM', payload: cartItem });
+
+      // Синхронизируем с сервером
+      if (session?.user) {
+        await syncWithServer('add', { productId, quantity });
+      }
+    } catch (error) {
+      console.error('Ошибка добавления в корзину:', error);
+    }
+  };
+
+  const updateQuantity = async (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      await removeFromCart(productId);
+      return;
+    }
+
+    const existingItem = state.items.find(item => item.id === productId);
+    if (!existingItem) return;
+
+    const updatedItem = { ...existingItem, quantity };
+    dispatch({ type: 'UPDATE_ITEM', payload: updatedItem });
+
+    // Синхронизируем с сервером
+    if (session?.user) {
+      await syncWithServer('update', { productId, quantity });
+    }
+  };
+
+  const removeFromCart = async (productId: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { productId } });
+
+    // Синхронизируем с сервером
+    if (session?.user) {
+      await syncWithServer('delete', { productId });
+    }
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
-  };
-
-  const clearCart = () => {
+  const clearCart = async () => {
     dispatch({ type: 'CLEAR_CART' });
+
+    // Синхронизируем с сервером
+    if (session?.user) {
+      await syncWithServer('delete', {});
+    }
   };
 
-  const isInCart = (productId: string): boolean => {
-    return cart.items.some(item => item.id === productId);
+  const isInCart = (productId: string) => {
+    return state.items.some(item => item.id === productId);
   };
 
-  const getItemQuantity = (productId: string): number => {
-    const item = cart.items.find(item => item.id === productId);
+  const getItemQuantity = (productId: string) => {
+    const item = state.items.find(item => item.id === productId);
     return item ? item.quantity : 0;
   };
 
   const value: CartContextType = {
-    cart,
+    cart: {
+      items: state.items,
+      totalItems: state.totalItems,
+      totalPrice: state.totalPrice,
+    },
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
     isInCart,
-    getItemQuantity
+    getItemQuantity,
   };
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-export function useCart() {
+export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-}
+};
