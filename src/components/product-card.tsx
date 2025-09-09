@@ -59,11 +59,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   return (
     <Card
-      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-xl hover:shadow-emerald-200/30 hover:border-emerald-300 transition-all duration-300 w-full max-w-sm hover:-translate-y-2"
+      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-lime-300 transition-all duration-200 w-full max-w-sm flex flex-col h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex flex-col h-full">
           <div className="relative w-full h-60 sm:h-72 overflow-hidden bg-gray-50">
             <Lens zoomFactor={1.5} lensSize={120}>
               <div
@@ -185,7 +185,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
           </div>
 
-          <div className="p-3 sm:p-4 flex flex-col h-full">
+          <div className="p-3 sm:p-4 flex flex-col flex-1">
             {/* Цена в верхнем левом углу */}
             <div className="mb-2">
               <ProductPrice 
@@ -197,22 +197,26 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
 
             {/* Название товара */}
-            <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm mb-1">
-              <Link 
-                href={`/product/${product.id}`} 
-                className="hover:text-emerald-600 transition-colors duration-200 cursor-pointer"
-              >
-                {product.name}
-              </Link>
-            </h3>
+            <div className="min-h-[2.5rem] mb-1 flex items-start">
+              <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm">
+                <Link 
+                  href={`/product/${product.id}`} 
+                  className="hover:text-forest-600 transition-colors duration-200 cursor-pointer"
+                >
+                  {product.name}
+                </Link>
+              </h3>
+            </div>
 
             {/* Описание - только на больших экранах */}
-            <p className="text-xs text-gray-600 line-clamp-1 hidden sm:block mb-2">
-              {product.description}
-            </p>
+            <div className="min-h-[1.25rem] mb-2">
+              <p className="text-xs text-gray-600 line-clamp-1 hidden sm:block">
+                {product.description}
+              </p>
+            </div>
 
             {/* Badges */}
-            <div className="flex items-center gap-2 flex-wrap mb-2">
+            <div className="flex items-center gap-2 flex-wrap mb-4 min-h-[1.5rem]">
               <Badge variant="outline" className="hidden sm:inline-flex text-xs w-fit max-w-full truncate">
                 {product.category.length > 20 ? `${product.category.substring(0, 20)}...` : product.category}
               </Badge>
@@ -228,8 +232,8 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               className={cn(
                 "w-full rounded-xl py-3 text-sm font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] mt-auto",
                 inCart 
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border border-emerald-400 shadow-emerald-200" 
-                  : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-emerald-200 hover:shadow-emerald-300"
+                  ? "bg-forest-600 hover:bg-forest-700 text-white" 
+                  : "bg-lime-400 hover:bg-lime-500 text-forest-800"
               )}
               onClick={async (e) => {
                 e.stopPropagation();

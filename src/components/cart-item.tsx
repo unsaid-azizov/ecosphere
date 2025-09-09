@@ -59,7 +59,7 @@ export const CartItem = memo(function CartItem({ item, onUpdateQuantity, onRemov
                   href={`/product/${item.product.id}`}
                   className="block group"
                 >
-                  <h3 className="font-medium text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer">
+                  <h3 className="font-medium text-gray-900 line-clamp-2 mb-1 group-hover:text-forest-600 transition-colors cursor-pointer">
                     {item.product.name}
                   </h3>
                 </Link>
@@ -93,7 +93,7 @@ export const CartItem = memo(function CartItem({ item, onUpdateQuantity, onRemov
                     onClick={() => quickSetQuantity(qty)}
                     className={cn(
                       "h-7 px-3 text-xs",
-                      item.quantity === qty && "bg-gray-900 text-white hover:bg-gray-800"
+                      item.quantity === qty && "bg-lime-400 text-forest-800 hover:bg-lime-500"
                     )}
                   >
                     {qty}

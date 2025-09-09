@@ -25,7 +25,7 @@ export function CartClient() {
             Добавьте товары из каталога, чтобы оформить заказ
           </p>
           <Link href="/catalog">
-            <Button size="lg" className="bg-gray-900 hover:bg-gray-800">
+            <Button size="lg" className="bg-lime-400 hover:bg-lime-500 text-forest-800">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Перейти к покупкам
             </Button>
@@ -100,16 +100,18 @@ export function CartClient() {
               </div>
 
               <CheckoutDialog>
-                <Button size="lg" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+                <Button size="lg" className="w-full bg-lime-400 hover:bg-lime-500 text-forest-800">
                   Оформить заказ
                 </Button>
               </CheckoutDialog>
               
-              <Link href="/catalog">
-                <Button variant="outline" size="lg" className="w-full">
-                  Продолжить покупки
-                </Button>
-              </Link>
+              <div className="pt-2">
+                <Link href="/catalog">
+                  <Button variant="outline" size="lg" className="w-full">
+                    Продолжить покупки
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>

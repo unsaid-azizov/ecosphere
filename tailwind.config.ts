@@ -51,6 +51,43 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // New Brave Labs inspired color palette
+        lime: {
+          50: '#f8ffe6',
+          100: '#eeffcc',
+          200: '#dcff99',
+          300: '#c4ff5c',
+          400: '#b8f312', // Main lime/yellow
+          500: '#9dd004',
+          600: '#7ba500',
+          700: '#5d7d02',
+          800: '#4a6208',
+          900: '#3f520b',
+        },
+        forest: {
+          50: '#f0f9f3',
+          100: '#dcf2e1', 
+          200: '#bce5c7',
+          300: '#8dd1a3',
+          400: '#58b676',
+          500: '#359b56',
+          600: '#277d43',
+          700: '#1f6237', // Medium green
+          800: '#1a4d3a', // Dark green from reference  
+          900: '#0d2818', // Darkest green
+        },
+        sage: {
+          50: '#f4f6f3',
+          100: '#e6ebe3',
+          200: '#cdd7c8',
+          300: '#a4d17a', // Light green from reference
+          400: '#7fb069',
+          500: '#5d8a4a',
+          600: '#486b3a',
+          700: '#3b5630',
+          800: '#314529',
+          900: '#2a3a25',
+        }
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -33,32 +33,15 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="relative bg-gradient-to-r from-white via-emerald-50/30 to-sky-50/30 border-b border-emerald-100/50 sticky top-0 z-50 backdrop-blur-sm">
-      {/* Зернистый радиальный градиент - эффект забрызганности */}
-      <div 
-        className="absolute inset-0 opacity-75"
-        style={{
-          background: `
-            radial-gradient(circle at 12% 20%, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.12) 30%, transparent 60%),
-            radial-gradient(circle at 88% 10%, rgba(14, 165, 233, 0.22) 0%, rgba(14, 165, 233, 0.10) 25%, transparent 55%),
-            radial-gradient(circle at 5% 60%, rgba(34, 197, 94, 0.18) 0%, transparent 45%),
-            radial-gradient(circle at 95% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 40%),
-            radial-gradient(circle at 35% 5%, rgba(52, 211, 153, 0.12) 0%, transparent 35%),
-            radial-gradient(circle at 65% 95%, rgba(14, 116, 144, 0.10) 0%, transparent 30%)
-          `,
-          filter: 'blur(0.6px) contrast(1.05)',
-          mixBlendMode: 'multiply'
-        }}
-      />
-      <div className="relative z-10">
+    <nav className="relative bg-forest-800 border-b border-forest-700 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-sky-600 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg transition-shadow duration-200">
+            <div className="w-8 h-8 bg-lime-400 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200">
               <span className="text-white font-bold text-sm">Э</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-sky-700 bg-clip-text text-transparent">ЭкоСфера</span>
+            <span className="text-xl font-bold text-white">ЭкоСфера</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -67,7 +50,7 @@ export function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-600 hover:text-sky-700 px-3 py-2 text-sm font-medium transition-colors"
+                className="text-lime-100 hover:text-lime-300 px-3 py-2 text-sm font-medium transition-colors"
               >
                 {item.name}
               </Link>
@@ -76,7 +59,7 @@ export function Navbar() {
             {/* Contacts Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                <Button variant="ghost" className="text-lime-100 hover:text-lime-300 px-3 py-2 text-sm font-medium">
                   Контакты
                 </Button>
               </DropdownMenuTrigger>
@@ -148,7 +131,7 @@ export function Navbar() {
               {session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                    <Button variant="ghost" className="flex items-center gap-2 text-lime-100 hover:text-lime-300">
                       <User className="w-4 h-4" />
                       <span className="max-w-32 truncate">
                         {session.user.firstName 
@@ -190,17 +173,17 @@ export function Navbar() {
             </div>
 
             {/* Search Button */}
-            <Button variant="ghost" size="sm" className="hidden sm:flex hover:scale-110 transition-transform duration-200">
+            <Button variant="ghost" size="sm" className="hidden sm:flex hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
               <Search className="w-4 h-4" />
             </Button>
 
             {/* Favorites */}
             <Link href="/favorites">
-              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
                 <Heart className="w-4 h-4" />
                 {favorites.length > 0 && (
                   <Badge 
-                    className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg"
+                    className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-lime-400 text-white border-0 shadow-lg"
                   >
                     {favorites.length > 99 ? '99+' : favorites.length}
                   </Badge>
@@ -210,18 +193,18 @@ export function Navbar() {
 
             {/* History/Orders */}
             <Link href="/orders">
-              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
                 <History className="w-4 h-4" />
               </Button>
             </Link>
 
             {/* Cart */}
             <Link href="/cart">
-              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
                 <ShoppingCart className="w-4 h-4" />
                 {cart.totalItems > 0 && (
                   <Badge 
-                    className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 shadow-lg animate-pulse"
+                    className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-forest-600 text-white border-0 shadow-lg animate-pulse"
                   >
                     {cart.totalItems > 99 ? '99+' : cart.totalItems}
                   </Badge>
@@ -233,7 +216,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden"
+              className="md:hidden text-lime-100 hover:text-lime-300"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -251,8 +234,8 @@ export function Navbar() {
             <div className="px-3 py-2 md:hidden">
               {session ? (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
-                    <User className="w-5 h-5 text-emerald-600" />
+                  <div className="flex items-center gap-3 p-3 bg-lime-50 rounded-lg">
+                    <User className="w-5 h-5 text-forest-600" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 truncate">
                         {session.user.firstName 
@@ -269,7 +252,7 @@ export function Navbar() {
                   </div>
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-forest-700 hover:bg-lime-50 rounded-md transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="w-4 h-4" />
@@ -302,7 +285,7 @@ export function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
+                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-forest-700 hover:bg-lime-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.name}
@@ -328,10 +311,10 @@ export function Navbar() {
                 href="https://wa.me/79812808585?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%9C%D0%B5%D0%BD%D1%8F%20%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B5%D1%82..." 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-forest-700 hover:bg-lime-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <MessageCircle className="w-4 h-4 text-emerald-500" />
+                <MessageCircle className="w-4 h-4 text-forest-500" />
                 <span className="text-base font-medium">WhatsApp</span>
               </a>
               
@@ -339,19 +322,19 @@ export function Navbar() {
                 href="https://t.me/+79812808585" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-forest-700 hover:bg-lime-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <MessageCircle className="w-4 h-4 text-sky-500" />
+                <MessageCircle className="w-4 h-4 text-sage-500" />
                 <span className="text-base font-medium">Telegram</span>
               </a>
               
               <a 
                 href="mailto:info@ecosphere.su" 
-                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-forest-700 hover:bg-lime-50 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Mail className="w-4 h-4 text-sky-600" />
+                <Mail className="w-4 h-4 text-sage-600" />
                 <span className="text-base font-medium">info@ecosphere.su</span>
               </a>
               
@@ -371,7 +354,6 @@ export function Navbar() {
             </div>
           </div>
         </div>
-      </div>
       </div>
     </nav>
   );

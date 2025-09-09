@@ -61,7 +61,7 @@ export function FavoritesClient() {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lime-400"></div>
           <p className="mt-4 text-gray-600">Загрузка избранных товаров...</p>
         </div>
       </div>
@@ -81,7 +81,7 @@ export function FavoritesClient() {
           Войдите в аккаунт, чтобы увидеть ваши избранные товары
         </p>
         <Link href="/auth/signin">
-          <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+          <Button className="bg-lime-400 hover:bg-lime-500 text-forest-800">
             Войти в аккаунт
           </Button>
         </Link>
@@ -93,7 +93,7 @@ export function FavoritesClient() {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lime-400"></div>
           <p className="mt-4 text-gray-600">Загрузка товаров...</p>
         </div>
       </div>
@@ -113,7 +113,7 @@ export function FavoritesClient() {
         <p className="text-gray-600 mb-4">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
-          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+          className="px-4 py-2 bg-lime-400 text-forest-800 rounded-md hover:bg-lime-500"
         >
           Попробовать снова
         </button>
@@ -173,7 +173,7 @@ export function FavoritesClient() {
           </p>
           
           <Link href="/catalog">
-            <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+            <Button className="bg-lime-400 hover:bg-lime-500 text-forest-800">
               <ShoppingBag className="w-5 h-5 mr-2" />
               Перейти в каталог
             </Button>
