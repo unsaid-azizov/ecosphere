@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/contexts/cart-context";
 import { OrdersProvider } from "@/contexts/orders-context";
 import { FavoritesProvider } from "@/contexts/favorites-context";
+// import { DiscountProvider } from "@/contexts/discount-context"; // ВРЕМЕННО ОТКЛЮЧЕНО
 import { SessionProvider } from "@/providers/session-provider";
 
 export const metadata: Metadata = {

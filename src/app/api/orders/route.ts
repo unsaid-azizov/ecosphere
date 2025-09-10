@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getProducts } from '@/lib/data-client'
 
 // GET - получить заказы пользователя
 export async function GET(request: NextRequest) {
@@ -60,10 +59,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Получаем данные о товарах
-    const products = getProducts()
+    // Получаем данные о товарах из корзины пользователя
+    const cartItems = await prisma.cartItem.findMany({
+      where: {
+        userId: session.user.id,
+        productId: {
+          in: items.map((item: any) => item.productId)
+        }
+      }
+    })
+
+    if (cartItems.length === 0) {
+      return NextResponse.json(
+        { error: 'Корзина пуста' },
+        { status: 400 }
+      )
+    }
+
+    // Получаем данные о товарах из базы данных
+    let products: any[] = []
+    try {
+      products = await prisma.product.findMany({
+        where: {
+          id: {
+            in: items.map((item: any) => item.productId)
+          }
+        }
+      })
+    } catch (error) {
+      console.log('Products table not found, using fallback data')
+      // Fallback к данным из data-client если таблица товаров еще не создана
+      const { getProducts } = await import('@/lib/data-client')
+      products = getProducts()
+    }
+
     const totalAmount = items.reduce((sum: number, item: any) => {
-      const product = products.find(p => p.id === item.productId)
+      const product = products.find((p: any) => p.id === item.productId)
       return sum + (product ? product.price * item.quantity : 0)
     }, 0)
 
@@ -87,7 +118,7 @@ export async function POST(request: NextRequest) {
       // Добавляем товары в заказ
       const orderItems = await Promise.all(
         items.map((item: any) => {
-          const product = products.find(p => p.id === item.productId)
+          const product = products.find((p: any) => p.id === item.productId)
           if (!product) throw new Error(`Товар ${item.productId} не найден`)
 
           return tx.orderItem.create({
@@ -98,7 +129,7 @@ export async function POST(request: NextRequest) {
               price: product.price,
               productName: product.name,
               productCategory: product.category,
-              productArticle: product.article,
+              productArticle: product.article || product.id,
             }
           })
         })
@@ -118,7 +149,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Ошибка создания заказа:', error)
     return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
+      { error: 'Внутренняя ошибка сервера', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

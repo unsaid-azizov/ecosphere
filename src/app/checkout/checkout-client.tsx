@@ -142,7 +142,7 @@ export function CheckoutClient() {
           
         } catch (error) {
           console.error('Failed to save order to history:', error);
-          alert('Заказ отправлен, но не удалось сохранить в историю: ' + error.message);
+          alert('Заказ отправлен, но не удалось сохранить в историю: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
           clearCart();
           window.location.href = '/order-success';
         }

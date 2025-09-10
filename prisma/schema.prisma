@@ -25,11 +25,24 @@ enum OrderStatus {
   CANCELLED  // Отменен
 }
 
+enum UserRole {
+  USER       // Обычный пользователь
+  MANAGER    // Менеджер (только чтение)
+  ADMIN      // Администратор (полный доступ)
+}
+
+enum DiscountType {
+  PRODUCT   // Скидка на конкретный товар
+  CATEGORY  // Скидка на категорию товаров
+  ALL       // Скидка на все товары
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   userType  UserType
+  role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -55,10 +68,12 @@ model User {
   specialPrices   UserSpecialPrice[] // Персональные цены на товары
 
   // Связи
-  orders        Order[]
-  favorites     Favorite[]
-  cartItems     CartItem[]
-  loyaltyPoints Int        @default(0) // Баллы лояльности
+  orders           Order[]
+  favorites        Favorite[]
+  cartItems        CartItem[]
+  loyaltyPoints    Int        @default(0) // Баллы лояльности
+  personalDiscounts PersonalDiscount[] // Персональные скидки для пользователя
+  createdDiscounts PersonalDiscount[] @relation("CreatedDiscounts") // Скидки, созданные пользователем (если админ)
 
   @@map("users")
 }
@@ -153,7 +168,44 @@ model ProductInventory {
   @@map("product_inventory")
 }
 
-// Модель для скидок на товары
+// Модель для персонализированных скидок
+model PersonalDiscount {
+  id              String   @id @default(cuid())
+  name            String   // Название скидки (например, "VIP скидка для Иванова")
+  description     String?  // Описание скидки
+  
+  // Кому применяется скидка
+  userId          String?  // Конкретный пользователь (null = для всех)
+  userType        UserType? // Тип пользователя (INDIVIDUAL, IP, OOO)
+  
+  // На что применяется скидка
+  discountType    DiscountType // PRODUCT, CATEGORY, ALL
+  productId       String?  // Конкретный товар (если discountType = PRODUCT)
+  category        String?  // Категория товаров (если discountType = CATEGORY)
+  
+  // Параметры скидки
+  discountPercent Int      // Процент скидки (1-99)
+  
+  // Временные ограничения
+  validFrom       DateTime @default(now())
+  validUntil      DateTime?
+  
+  // Статус
+  isActive        Boolean  @default(true)
+  
+  // Метаданные
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       String   // ID администратора, создавшего скидку
+  
+  // Связи
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator         User     @relation("CreatedDiscounts", fields: [createdBy], references: [id])
+
+  @@map("personal_discounts")
+}
+
+// Модель для скидок на товары (оставляем для совместимости)
 model ProductDiscount {
   id          String   @id @default(cuid())
   productId   String   @unique // ID товара из CSV

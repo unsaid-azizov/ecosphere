@@ -112,7 +112,7 @@ export function CategorySidebar({
             <div className="flex flex-wrap gap-2">
               {searchValue && (
                 <Badge className="gap-1 bg-forest-100 text-forest-800 hover:bg-forest-200">
-                  Поиск: "{searchValue}"
+                  Поиск: &quot;{searchValue}&quot;
                   <button 
                     onClick={onRemoveSearchFilter}
                     className="ml-1 hover:bg-gray-200 rounded-full p-0.5"

@@ -84,7 +84,10 @@ export function OrdersClient() {
   if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 border-4 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lime-400"></div>
+          <p className="mt-4 text-gray-600">Загрузка заказов...</p>
+        </div>
       </div>
     );
   }
@@ -98,17 +101,16 @@ export function OrdersClient() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Package className="w-8 h-8 text-emerald-600" />
+            <Package className="w-8 h-8 text-forest-600" />
             <h1 className="text-3xl font-bold text-gray-900">
               Мои заказы
             </h1>
           </div>
-          <p className="text-gray-600">
-            {orders.length > 0 
-              ? `У вас ${orders.length} заказ${orders.length > 4 ? 'ов' : orders.length === 1 ? '' : 'а'}`
-              : 'У вас пока нет заказов'
-            }
-          </p>
+          {orders.length > 0 && (
+            <p className="text-gray-600">
+              У вас {orders.length} заказ{orders.length > 4 ? 'ов' : orders.length === 1 ? '' : 'а'}
+            </p>
+          )}
         </div>
 
         {orders.length > 0 ? (
@@ -118,8 +120,8 @@ export function OrdersClient() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-100 rounded-lg">
-                        <Package className="w-5 h-5 text-emerald-600" />
+                      <div className="p-2 bg-lime-100 rounded-lg">
+                        <Package className="w-5 h-5 text-forest-600" />
                       </div>
                       <div>
                         <CardTitle className="text-lg">
@@ -141,7 +143,7 @@ export function OrdersClient() {
                       <Badge className={`${statusColors[order.status]} mb-2`}>
                         {statusLabels[order.status]}
                       </Badge>
-                      <div className="text-lg font-bold text-emerald-600">
+                      <div className="text-lg font-bold text-forest-600">
                         ₽{order.totalAmount.toLocaleString()}
                       </div>
                     </div>
@@ -210,7 +212,7 @@ export function OrdersClient() {
             </p>
             
             <Link href="/catalog">
-              <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+              <Button className="bg-lime-400 hover:bg-lime-500 text-forest-800">
                 <ShoppingBag className="w-5 h-5 mr-2" />
                 Перейти в каталог
               </Button>

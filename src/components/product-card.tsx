@@ -13,13 +13,21 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/cart-context';
 import { ProductPrice } from '@/components/product-price';
 import { FavoriteButton } from '@/components/favorite-button';
+import { DiscountBadge } from '@/components/discount-badge';
 
 interface ProductCardProps {
   product: Product;
   index?: number; // Добавляем индекс для приоритета загрузки
+  discountPercent?: number; // Процент скидки для отображения
+  discountName?: string; // Название скидки
 }
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
+export function ProductCard({ 
+  product, 
+  index = 0, 
+  discountPercent = 0, 
+  discountName 
+}: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -217,6 +225,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-4 min-h-[1.5rem]">
+              <DiscountBadge 
+                discountPercent={discountPercent}
+                discountName={discountName}
+                className="text-xs"
+              />
               <Badge variant="outline" className="hidden sm:inline-flex text-xs w-fit max-w-full truncate">
                 {product.category.length > 20 ? `${product.category.substring(0, 20)}...` : product.category}
               </Badge>

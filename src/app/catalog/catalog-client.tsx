@@ -5,8 +5,13 @@ import { CategorySidebar } from '@/components/category-sidebar';
 import { ProductCard } from '@/components/product-card';
 import { BannerCarousel } from '@/components/banner-carousel';
 import { useProducts } from '@/hooks/use-products';
+import { type ServerDiscountResult } from '@/lib/server-discounts';
 
-export function CatalogClient() {
+interface CatalogClientProps {
+  discounts: ServerDiscountResult[]
+}
+
+export function CatalogClient({ discounts }: CatalogClientProps) {
   const {
     products,
     filteredProducts,
@@ -17,6 +22,11 @@ export function CatalogClient() {
     loading,
     error
   } = useProducts();
+
+  // Helper function to find discount for a product
+  const getProductDiscount = (productId: string) => {
+    return discounts.find(d => d.productId === productId);
+  };
 
   if (loading) {
     return (
@@ -149,7 +159,12 @@ export function CatalogClient() {
                   className="animate-in fade-in slide-in-from-bottom-4 duration-500"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <ProductCard product={product} index={index} />
+                  <ProductCard 
+                    product={product} 
+                    index={index}
+                    discountPercent={getProductDiscount(product.id)?.discountPercent || 0}
+                    discountName={getProductDiscount(product.id)?.discountName}
+                  />
                 </div>
               ))}
             </div>

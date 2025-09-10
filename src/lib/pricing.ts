@@ -14,11 +14,21 @@ interface PriceCalculationParams {
   productDiscountPercent?: number
 }
 
-interface PriceResult {
+export interface PriceResult {
   originalPrice: number
   finalPrice: number
   discount: number
-  discountType: 'none' | 'user' | 'special' | 'product' | 'vip' | 'business'
+  discountType: 'none' | 'user' | 'special' | 'product' | 'vip' | 'business' | 'personal'
+  savings: number
+  discountName?: string
+}
+
+export interface DiscountCalculationResult {
+  productId: string
+  originalPrice: number
+  discountedPrice: number
+  discountPercent: number
+  discountName?: string
   savings: number
 }
 
@@ -99,10 +109,47 @@ export function calculatePrice(params: PriceCalculationParams): PriceResult {
 }
 
 /**
+ * Вызывает API для расчета скидки на товары
+ */
+export async function calculateDiscounts(products: Array<{ productId: string; originalPrice: number }>): Promise<DiscountCalculationResult[]> {
+  try {
+    const response = await fetch('/api/discounts/calculate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ products })
+    })
+
+    if (!response.ok) {
+      throw new Error('Ошибка расчета скидок')
+    }
+
+    const data = await response.json()
+    return data.results
+  } catch (error) {
+    console.error('Ошибка расчета скидок:', error)
+    return products.map(p => ({
+      productId: p.productId,
+      originalPrice: p.originalPrice,
+      discountedPrice: p.originalPrice,
+      discountPercent: 0,
+      savings: 0
+    }))
+  }
+}
+
+/**
  * Получает описание типа скидки для отображения пользователю
  */
-export function getDiscountDescription(discountType: PriceResult['discountType'], userType?: UserType | null): string {
+export function getDiscountDescription(discountType: PriceResult['discountType'], userType?: UserType | null, discountName?: string): string {
+  if (discountName) {
+    return discountName
+  }
+  
   switch (discountType) {
+    case 'personal':
+      return 'Персональная скидка'
     case 'special':
       return 'Специальная цена'
     case 'vip':
@@ -126,6 +173,8 @@ export function getDiscountDescription(discountType: PriceResult['discountType']
  */
 export function getDiscountBadgeColor(discountType: PriceResult['discountType']): string {
   switch (discountType) {
+    case 'personal':
+      return 'bg-lime-100 text-lime-800'
     case 'special':
       return 'bg-purple-100 text-purple-800'
     case 'vip':

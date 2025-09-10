@@ -10,6 +10,7 @@ declare module 'next-auth' {
       id: string
       email: string
       userType: string
+      role: string
       firstName?: string | null
       lastName?: string | null
       companyName?: string | null
@@ -20,6 +21,7 @@ declare module 'next-auth' {
     id: string
     email: string
     userType: string
+    role: string
     firstName?: string | null
     lastName?: string | null
     companyName?: string | null
@@ -30,6 +32,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string
     userType: string
+    role: string
     firstName?: string | null
     lastName?: string | null
     companyName?: string | null
@@ -72,6 +75,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           userType: user.userType,
+          role: user.role,
           firstName: user.firstName,
           lastName: user.lastName,
           companyName: user.companyName,
@@ -87,6 +91,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.userType = user.userType
+        token.role = user.role
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.companyName = user.companyName
@@ -96,6 +101,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       session.user.id = token.id
       session.user.userType = token.userType
+      session.user.role = token.role
       session.user.firstName = token.firstName
       session.user.lastName = token.lastName
       session.user.companyName = token.companyName

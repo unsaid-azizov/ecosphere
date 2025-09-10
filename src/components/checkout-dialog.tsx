@@ -73,7 +73,8 @@ export function CheckoutDialog({ children }: CheckoutDialogProps) {
         router.push('/orders')
       } else {
         const error = await response.json()
-        alert(`Ошибка создания заказа: ${error.error}`)
+        console.error('Order creation error:', error)
+        alert(`Ошибка создания заказа: ${error.error}${error.details ? '\nДетали: ' + error.details : ''}`)
       }
     } catch (error) {
       console.error('Ошибка создания заказа:', error)

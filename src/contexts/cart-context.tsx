@@ -150,6 +150,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 id: dbItem.productId,
                 product,
                 quantity: dbItem.quantity,
+                addedAt: new Date(dbItem.createdAt),
               });
             }
           } catch (error) {
@@ -235,6 +236,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       id: productId,
       product,
       quantity,
+      addedAt: new Date(),
     };
 
       dispatch({ type: 'ADD_ITEM', payload: cartItem });
