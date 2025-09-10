@@ -205,10 +205,7 @@ export default async function AdminDashboard() {
     <AdminLayout userRole={user.role}>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Добро пожаловать в админ панель ЭкоСфера
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Админ панель ЭкоСфера</h1>
         </div>
 
         {/* Stats Cards */}

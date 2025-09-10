@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ProductDetail } from '@/components/product-detail';
 import { Navbar } from '@/components/navbar';
 import { prisma } from '@/lib/prisma';
@@ -38,11 +38,18 @@ async function getProduct(id: string): Promise<Product | null> {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
+    // Validate ID format - if it's not a valid UUID, redirect to catalog
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(params.id)) {
+      redirect('/catalog');
+    }
+
     const product = await getProduct(params.id);
 
     if (!product) {
       console.log(`Product not found: ${params.id}`);
-      notFound();
+      // Instead of showing 404, redirect to catalog
+      redirect('/catalog');
     }
 
     return (
