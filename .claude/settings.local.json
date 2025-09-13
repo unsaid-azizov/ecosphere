@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp___magicuidesign_mcp__getComponents",
+      "WebSearch",
+      "Bash(git add:*)"
+    ]
+  },
   "enabledMcpjsonServers": [
     "shadcn",
     "@magicuidesign/mcp"

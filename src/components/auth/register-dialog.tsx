@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { User, Building2, Store } from 'lucide-react';
+import { User, Building2, Store, Phone, Mail, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type UserType = 'individual' | 'ip' | 'ooo';
@@ -32,6 +32,7 @@ interface RegisterFormData {
 
 export function RegisterDialog() {
   const [open, setOpen] = useState(false);
+  const [showSupportDialog, setShowSupportDialog] = useState(false);
   const [formData, setFormData] = useState<RegisterFormData>({
     userType: 'individual',
     email: '',
@@ -99,13 +100,13 @@ export function RegisterDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+        <Button variant="outline" className="text-forest-600 border-forest-300 hover:bg-forest-50 hover:text-forest-800">
           Зарегистрироваться
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-emerald-600">
+          <DialogTitle className="text-2xl font-bold text-forest-800">
             Создать аккаунт ЭкоСфера
           </DialogTitle>
           <DialogDescription>
@@ -134,16 +135,16 @@ export function RegisterDialog() {
                     <Label
                       htmlFor={type.id}
                       className={cn(
-                        "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:bg-emerald-50",
+                        "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:bg-forest-50",
                         formData.userType === type.id
-                          ? "border-emerald-500 bg-emerald-50 shadow-md"
+                          ? "border-forest-500 bg-forest-50 shadow-md"
                           : "border-gray-200 bg-white"
                       )}
                     >
                       <div className={cn(
                         "flex items-center justify-center w-10 h-10 rounded-lg",
                         formData.userType === type.id
-                          ? "bg-emerald-500 text-white"
+                          ? "bg-forest-500 text-white"
                           : "bg-gray-100 text-gray-600"
                       )}>
                         <Icon className="w-5 h-5" />
@@ -309,28 +310,103 @@ export function RegisterDialog() {
           )}
 
           {/* Кнопки */}
-          <div className="flex gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="flex-1"
-            >
-              Отмена
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-              ) : null}
-              Создать аккаунт
-            </Button>
+          <div className="space-y-4">
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-forest-600 hover:text-forest-700 p-0 h-auto text-sm"
+                onClick={() => setShowSupportDialog(true)}
+              >
+                Нужна помощь с регистрацией?
+              </Button>
+            </div>
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-lime-400 hover:bg-lime-500 text-forest-800"
+              >
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                ) : null}
+                Создать аккаунт
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>
+      
+      {/* Support Contact Dialog */}
+      <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-forest-800">
+              Нужна помощь?
+            </DialogTitle>
+            <DialogDescription>
+              Свяжитесь с нашей службой поддержки для помощи с регистрацией
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
+                <Phone className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-emerald-900">Телефон</p>
+                  <p className="text-sm text-emerald-700">+7 981 280-85-85</p>
+                  <p className="text-xs text-emerald-600">Ежедневно с 9:00 до 21:00</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                <MessageCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-green-900">WhatsApp</p>
+                  <p className="text-sm text-green-700">+7 981 280-85-85</p>
+                  <p className="text-xs text-green-600">Быстрые ответы в мессенджере</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-sky-50 rounded-lg">
+                <MessageCircle className="w-5 h-5 text-sky-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-sky-900">Telegram</p>
+                  <p className="text-sm text-sky-700">+7 981 280-85-85</p>
+                  <p className="text-xs text-sky-600">Онлайн поддержка</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <Mail className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-blue-900">Email</p>
+                  <p className="text-sm text-blue-700">info@ecosphere.su</p>
+                  <p className="text-xs text-blue-600">Ответим в течение 24 часов</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <Button
+                onClick={() => setShowSupportDialog(false)}
+                className="bg-lime-400 hover:bg-lime-500 text-forest-800"
+              >
+                Понятно
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

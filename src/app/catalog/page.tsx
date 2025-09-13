@@ -43,7 +43,7 @@ export default async function CatalogPage() {
       
       <div>
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 py-8">
         <Suspense fallback={<div>Загрузка...</div>}>
           <CatalogClient discounts={discounts} />
         </Suspense>

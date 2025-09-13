@@ -37,6 +37,12 @@ enum DiscountType {
   ALL       // Скидка на все товары
 }
 
+enum PostStatus {
+  DRAFT     // Черновик
+  PUBLISHED // Опубликован
+  ARCHIVED  // Архивирован
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -74,6 +80,7 @@ model User {
   loyaltyPoints    Int        @default(0) // Баллы лояльности
   personalDiscounts PersonalDiscount[] // Персональные скидки для пользователя
   createdDiscounts PersonalDiscount[] @relation("CreatedDiscounts") // Скидки, созданные пользователем (если админ)
+  posts            Post[] // Посты в блоге, созданные пользователем
 
   @@map("users")
 }
@@ -237,4 +244,41 @@ model Product {
   updatedAt   DateTime @updatedAt
   
   @@map("products")
+}
+
+// Модель для блога
+model Post {
+  id          String     @id @default(cuid())
+  title       String     // Заголовок поста
+  slug        String     @unique // URL-friendly версия заголовка
+  excerpt     String?    // Краткое описание/анонс
+  content     String     @db.Text // Содержание поста (markdown)
+  contentType String     @default("markdown") // Тип контента: "markdown" или "blocks"
+  blocks      Json?      // Блочная структура контента (JSON)
+  coverImage  String?    // Обложка поста
+  images      String[]   // Дополнительные изображения
+  
+  // Метаданные
+  status      PostStatus @default(DRAFT)
+  featured    Boolean    @default(false) // Рекомендуемый пост
+  views       Int        @default(0) // Количество просмотров
+  
+  // Категоризация
+  category    String?    // Категория поста
+  tags        String[]   // Теги
+  
+  // SEO
+  metaTitle       String? // SEO заголовок
+  metaDescription String? // SEO описание
+  
+  // Временные метки
+  publishedAt DateTime?  // Дата публикации
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // Автор
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  
+  @@map("posts")
 }

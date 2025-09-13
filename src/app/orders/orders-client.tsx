@@ -7,8 +7,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Calendar, Mail, Phone, MapPin, ShoppingBag } from 'lucide-react';
+import { Package, Calendar, Mail, Phone, MapPin, ShoppingBag, User } from 'lucide-react';
 import Link from 'next/link';
+import { LoginDialog } from '@/components/auth/login-dialog';
+import { RegisterDialog } from '@/components/auth/register-dialog';
 
 interface OrderItem {
   id: string
@@ -57,12 +59,10 @@ export function OrdersClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-    } else if (status === 'authenticated') {
+    if (status === 'authenticated') {
       loadOrders();
     }
-  }, [status, router]);
+  }, [status]);
 
   const loadOrders = async () => {
     setLoading(true);
@@ -81,7 +81,67 @@ export function OrdersClient() {
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lime-400"></div>
+          <p className="mt-4 text-gray-600">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Package className="w-8 h-8 text-forest-600" />
+            <h1 className="text-3xl font-bold text-gray-900">
+              Мои заказы
+            </h1>
+          </div>
+          <p className="text-gray-600">
+            Здесь будут отображаться ваши заказы
+          </p>
+        </div>
+
+        {/* Auth Required Message */}
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <User className="w-12 h-12 text-gray-400" />
+          </div>
+          
+          <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+            Требуется авторизация
+          </h2>
+          
+          <p className="text-gray-600 mb-8 max-w-md">
+            Для просмотра ваших заказов необходимо войти в аккаунт или зарегистрироваться.
+            Создайте аккаунт, чтобы отслеживать заказы и получать персональные предложения.
+          </p>
+          
+          <div className="flex gap-4">
+            <LoginDialog />
+            <RegisterDialog />
+          </div>
+          
+          <div className="mt-6">
+            <Link href="/catalog">
+              <Button variant="ghost" className="text-forest-600 hover:text-forest-700">
+                <ShoppingBag className="w-4 h-4 mr-2" />
+                Продолжить покупки
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
@@ -90,10 +150,6 @@ export function OrdersClient() {
         </div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

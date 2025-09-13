@@ -101,9 +101,9 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
     <div className="space-y-8">
       <BannerCarousel />
       
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="lg:grid lg:grid-cols-[320px_1fr] lg:gap-8 flex flex-col gap-8">
         {/* Sidebar с категориями */}
-        <div className="lg:flex-shrink-0">
+        <div>
           <CategorySidebar
             categories={categories}
             selectedCategories={filters.categories || []}
@@ -117,7 +117,7 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
         </div>
 
         {/* Основной контент */}
-        <div className="flex-1 space-y-8">
+        <div className="space-y-8">
           <CatalogFilters
             categories={categories}
             priceRange={priceRange}
@@ -152,7 +152,7 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 w-full justify-items-stretch">
               {filteredProducts.map((product, index) => (
                 <div 
                   key={product.id} 

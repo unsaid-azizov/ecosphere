@@ -38,12 +38,6 @@ async function getProduct(id: string): Promise<Product | null> {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    // Validate ID format - if it's not a valid UUID, redirect to catalog
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(params.id)) {
-      redirect('/catalog');
-    }
-
     const product = await getProduct(params.id);
 
     if (!product) {
@@ -53,9 +47,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
     }
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-lime-50/80 to-sage-100/60 relative">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <ProductDetail product={product} />
         </div>
       </div>

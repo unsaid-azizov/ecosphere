@@ -12,7 +12,8 @@ import {
   Settings,
   Tag,
   LogOut,
-  X
+  X,
+  BookOpen
 } from 'lucide-react'
 import { UserRole } from '@prisma/client'
 import { Button } from '@/components/ui/button'
@@ -52,6 +53,12 @@ const navigation = [
     name: 'Скидки',
     href: '/admin/discounts',
     icon: Tag,
+    roles: ['ADMIN']
+  },
+  {
+    name: 'Блог',
+    href: '/admin/blog',
+    icon: BookOpen,
     roles: ['ADMIN']
   },
   {

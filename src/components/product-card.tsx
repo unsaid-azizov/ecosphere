@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,8 +37,25 @@ export function ProductCard({
   const isHighPriority = index < 6;
   
   const { addToCart, isInCart, getItemQuantity } = useCart();
+  const router = useRouter();
   const inCart = isInCart(product.id);
   const cartQuantity = getItemQuantity(product.id);
+
+  // Обработчик клика по карточке для навигации
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Не навигируем если клик был на интерактивном элементе
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') || 
+      target.closest('a') || 
+      target.closest('[role="button"]') ||
+      target.closest('.image-nav-button')
+    ) {
+      return;
+    }
+    
+    router.push(`/product/${product.id}`);
+  };
 
   // Обработчики переключения изображений
   const nextImage = () => {
@@ -67,15 +84,16 @@ export function ProductCard({
 
   return (
     <Card
-      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-lime-300 transition-all duration-200 w-full max-w-sm flex flex-col h-full"
+      className="group overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-lime-300 transition-all duration-200 w-full flex flex-col h-full cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <CardContent className="p-0 flex flex-col h-full">
-          <div className="relative w-full h-60 sm:h-72 overflow-hidden bg-gray-50">
+          <div className="relative w-full h-48 sm:h-60 lg:h-72 overflow-hidden bg-gray-50">
             <Lens zoomFactor={1.5} lensSize={120}>
               <div
-                className="relative w-full h-60 sm:h-72"
+                className="relative w-full h-48 sm:h-60 lg:h-72"
                 style={{
                   // Для плавной анимации используем translateX
                   overflow: 'hidden',
@@ -91,7 +109,7 @@ export function ProductCard({
                   {product.images.map((image, imgIndex) => (
                     <div
                       key={imgIndex}
-                      className="relative flex-shrink-0 w-full h-60 sm:h-72"
+                      className="relative flex-shrink-0 w-full h-48 sm:h-60 lg:h-72"
                       style={{ width: `${100 / product.images.length}%` }}
                     >
                       {/* Загружаем только видимое изображение + соседние для плавности */}
@@ -133,7 +151,7 @@ export function ProductCard({
                     prevImage();
                   }}
                   className={cn(
-                    "absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110",
+                    "image-nav-button absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110",
                     isHovered ? "opacity-100 translate-x-0" : "opacity-80 -translate-x-1"
                   )}
                 >
@@ -148,7 +166,7 @@ export function ProductCard({
                     nextImage();
                   }}
                   className={cn(
-                    "absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110",
+                    "image-nav-button absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110",
                     isHovered ? "opacity-100 translate-x-0" : "opacity-80 translate-x-1"
                   )}
                 >
@@ -206,13 +224,8 @@ export function ProductCard({
 
             {/* Название товара */}
             <div className="min-h-[2.5rem] mb-1 flex items-start">
-              <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm">
-                <Link 
-                  href={`/product/${product.id}`} 
-                  className="hover:text-forest-600 transition-colors duration-200 cursor-pointer"
-                >
-                  {product.name}
-                </Link>
+              <h3 className="font-medium text-gray-900 line-clamp-2 leading-5 text-sm hover:text-forest-600 transition-colors duration-200">
+                {product.name}
               </h3>
             </div>
 
@@ -225,12 +238,14 @@ export function ProductCard({
 
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-4 min-h-[1.5rem]">
-              <DiscountBadge 
-                discountPercent={discountPercent}
-                discountName={discountName}
-                className="text-xs"
-              />
-              <Badge variant="outline" className="hidden sm:inline-flex text-xs w-fit max-w-full truncate">
+              {discountPercent > 0 && (
+                <DiscountBadge 
+                  discountPercent={discountPercent}
+                  discountName={discountName}
+                  className="text-xs"
+                />
+              )}
+              <Badge variant="outline" className="text-xs w-fit max-w-full truncate border-forest-300 text-forest-600">
                 {product.category.length > 20 ? `${product.category.substring(0, 20)}...` : product.category}
               </Badge>
             </div>

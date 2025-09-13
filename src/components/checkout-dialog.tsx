@@ -187,7 +187,7 @@ export function CheckoutDialog({ children }: CheckoutDialogProps) {
             <Button
               type="submit"
               disabled={isLoading || cart.items.length === 0}
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
+              className="flex-1 bg-lime-500 hover:bg-lime-600"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />

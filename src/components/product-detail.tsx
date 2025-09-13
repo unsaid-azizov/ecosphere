@@ -50,7 +50,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
       <div className="mb-8">
         <Link 
           href="/catalog"
-          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center text-sm text-forest-600 hover:text-forest-800 transition-colors font-medium"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Вернуться к каталогу
@@ -60,7 +60,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Image Gallery */}
         <div className="space-y-4">
-          <div className="relative aspect-square bg-gray-50 rounded-2xl overflow-hidden shadow-lg">
+          <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200">
             
             {/* Carousel container with slide animation */}
             <div className="w-full h-full p-8">
@@ -106,7 +106,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     e.preventDefault();
                     prevImage();
                   }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110"
                 >
                   <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
@@ -117,7 +117,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     e.preventDefault();
                     nextImage();
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg flex items-center justify-center transition-all duration-300 z-30 border border-gray-200 hover:bg-white hover:scale-110"
                 >
                   <ChevronRight className="w-6 h-6 text-gray-700" />
                 </button>
@@ -143,8 +143,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   className={cn(
                     "flex-shrink-0 w-20 h-20 bg-white rounded-lg overflow-hidden border-2 transition-all duration-200",
                     index === currentImageIndex 
-                      ? "border-gray-900 shadow-md" 
-                      : "border-gray-200 hover:border-gray-400"
+                      ? "border-forest-600 shadow-md" 
+                      : "border-gray-200 hover:border-forest-400"
                   )}
                 >
                   <div className="relative w-full h-full p-2">
@@ -167,24 +167,24 @@ export function ProductDetail({ product }: ProductDetailProps) {
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <Badge variant="outline" className="mb-4 text-sm">
+            <Badge variant="outline" className="mb-4 text-sm border-forest-300 text-forest-700">
               {product.category.length > 25 ? `${product.category.substring(0, 25)}...` : product.category}
             </Badge>
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 leading-tight">{product.name}</h1>
-            <div className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">
+            <div className="text-3xl lg:text-4xl font-bold text-forest-700 mb-6">
               ₽{product.price.toLocaleString()}
             </div>
           </div>
 
           {/* Quantity and Add to Cart - moved to top */}
-          <div className="space-y-4 p-6 bg-gray-50 rounded-xl border">
+          <div className="space-y-4 p-6 bg-lime-50/50 rounded-xl border border-lime-200">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-base font-semibold text-gray-900">Количество:</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors flex items-center justify-center text-lg font-medium"
+                    className="w-8 h-8 rounded-lg border border-forest-300 hover:bg-forest-50 transition-colors flex items-center justify-center text-lg font-medium text-forest-700"
                     disabled={quantity <= 1}
                   >
                     -
@@ -196,12 +196,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
                       const value = Math.max(1, parseInt(e.target.value) || 1);
                       setQuantity(value);
                     }}
-                    className="w-20 h-8 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-20 h-8 text-center border border-forest-300 rounded-lg focus:ring-2 focus:ring-forest-500 focus:border-transparent"
                     min="1"
                   />
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors flex items-center justify-center text-lg font-medium"
+                    className="w-8 h-8 rounded-lg border border-forest-300 hover:bg-forest-50 transition-colors flex items-center justify-center text-lg font-medium text-forest-700"
                   >
                     +
                   </button>
@@ -217,8 +217,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     onClick={() => setQuantity(qty)}
                     className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
                       quantity === qty 
-                        ? 'bg-gray-900 text-white border-gray-900' 
-                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
+                        ? 'bg-forest-600 text-white border-forest-600' 
+                        : 'bg-white text-forest-600 border-forest-300 hover:bg-forest-50'
                     }`}
                   >
                     {qty}
@@ -248,8 +248,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   className={cn(
                     "sm:flex-1 h-12 text-base font-semibold transition-all duration-200",
                     inCart 
-                      ? "bg-green-600 hover:bg-green-700 text-white" 
-                      : "bg-gray-900 hover:bg-gray-800 text-white"
+                      ? "bg-forest-600 hover:bg-forest-700 text-white" 
+                      : "bg-lime-400 hover:bg-lime-500 text-forest-800"
                   )}
                   onClick={async () => {
                     if (!isAddingToCart) {
@@ -290,7 +290,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   <Button 
                     variant="outline" 
                     size="lg"
-                    className="flex-1 sm:flex-none h-12 sm:px-4"
+                    className="flex-1 sm:flex-none h-12 sm:px-4 border-forest-300 text-forest-600 hover:bg-forest-50"
                     title="Добавить в избранное"
                   >
                     <Heart className="w-5 h-5 sm:mr-0 mr-2" />
@@ -299,7 +299,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   <Button 
                     variant="outline" 
                     size="lg"
-                    className="flex-1 sm:flex-none h-12 sm:px-4"
+                    className="flex-1 sm:flex-none h-12 sm:px-4 border-forest-300 text-forest-600 hover:bg-forest-50"
                     title="Поделиться"
                   >
                     <Share2 className="w-5 h-5 sm:mr-0 mr-2" />
@@ -311,25 +311,25 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </div>
 
           {/* Description */}
-          <Card>
+          <Card className="border-gray-200 shadow-sm">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-3">Описание товара</h3>
+              <h3 className="font-semibold text-lg mb-3 text-forest-800">Описание товара</h3>
               <p className="text-gray-700 leading-relaxed">{product.description}</p>
             </CardContent>
           </Card>
 
           {/* Product Details */}
-          <Card>
+          <Card className="border-gray-200 shadow-sm">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Характеристики</h3>
+              <h3 className="font-semibold text-lg mb-4 text-forest-800">Характеристики</h3>
               <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Артикул</span>
-                  <span className="font-medium">{product.article}</span>
+                <div className="flex justify-between py-2 border-b border-lime-200">
+                  <span className="text-forest-600">Артикул</span>
+                  <span className="font-medium text-gray-900">{product.article}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Категория</span>
-                  <span className="font-medium text-right max-w-[60%] break-words">
+                <div className="flex justify-between py-2 border-b border-lime-200">
+                  <span className="text-forest-600">Категория</span>
+                  <span className="font-medium text-right max-w-[60%] break-words text-gray-900">
                     {product.category.length > 35 
                       ? `${product.category.substring(0, 35)}...` 
                       : product.category
@@ -337,8 +337,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   </span>
                 </div>
                 <div className="flex justify-between py-2">
-                  <span className="text-gray-600">Цена</span>
-                  <span className="font-medium">₽{product.price.toLocaleString()}</span>
+                  <span className="text-forest-600">Цена</span>
+                  <span className="font-medium text-forest-700">₽{product.price.toLocaleString()}</span>
                 </div>
               </div>
             </CardContent>

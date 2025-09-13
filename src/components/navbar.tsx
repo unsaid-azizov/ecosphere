@@ -28,8 +28,8 @@ export function Navbar() {
 
   const navigation = [
     { name: 'Каталог', href: '/catalog' },
-    { name: 'Мои заказы', href: '/orders' },
     { name: 'О компании', href: '/about' },
+    { name: 'Блог', href: '/blog' },
   ];
 
   return (
