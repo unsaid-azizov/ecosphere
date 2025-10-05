@@ -3,7 +3,9 @@
     "allow": [
       "mcp___magicuidesign_mcp__getComponents",
       "WebSearch",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   },
   "enabledMcpjsonServers": [

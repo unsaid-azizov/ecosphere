@@ -111,7 +111,7 @@ export function LoginDialog() {
             <Button
               type="button"
               variant="ghost"
-              className="text-forest-600 hover:text-forest-700 p-0 h-auto"
+              className="text-forest-600 hover:text-forest-700 hover:bg-transparent p-0 h-auto"
               onClick={() => setShowSupportDialog(true)}
             >
               Забыли пароль?
