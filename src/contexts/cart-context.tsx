@@ -115,21 +115,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (status === 'authenticated' && session?.user) {
       loadCartFromServer();
     } else if (status === 'unauthenticated') {
-      // Для неавторизованных пользователей загружаем из localStorage
-      loadCartFromLocalStorage();
+      // Очищаем корзину для неавторизованных пользователей
+      dispatch({ type: 'CLEAR_CART' });
     }
   }, [session, status]);
-
-  // Сохраняем в localStorage для неавторизованных пользователей
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      localStorage.setItem('cart', JSON.stringify({
-        items: state.items,
-        totalItems: state.totalItems,
-        totalPrice: state.totalPrice,
-      }));
-    }
-  }, [state.items, state.totalItems, state.totalPrice, status]);
 
   const loadCartFromServer = async () => {
     if (!session?.user) return;
@@ -174,17 +163,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loadCartFromLocalStorage = () => {
-    try {
-      const savedCart = localStorage.getItem('cart');
-      if (savedCart) {
-        const cartData = JSON.parse(savedCart);
-        dispatch({ type: 'SET_CART', payload: cartData });
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки корзины из localStorage:', error);
-    }
-  };
 
   const syncWithServer = async (action: string, data: any) => {
     if (!session?.user) return;
