@@ -5,15 +5,14 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Lens } from '@/components/magicui/lens';
-import { ChevronLeft, ChevronRight, ShoppingCart, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '@/types/product';
 import { cn } from '@/lib/utils';
-import { useCart } from '@/contexts/cart-context';
 import { ProductPrice } from '@/components/product-price';
 import { FavoriteButton } from '@/components/favorite-button';
 import { DiscountBadge } from '@/components/discount-badge';
+import { AddToCartButton } from '@/components/add-to-cart-button';
 
 interface ProductCardProps {
   product: Product;
@@ -22,24 +21,20 @@ interface ProductCardProps {
   discountName?: string; // Название скидки
 }
 
-export function ProductCard({ 
-  product, 
-  index = 0, 
-  discountPercent = 0, 
-  discountName 
+export function ProductCard({
+  product,
+  index = 0,
+  discountPercent = 0,
+  discountName
 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
-  
+
   // Первые 6 карточек загружаются с высоким приоритетом
   const isHighPriority = index < 6;
-  
-  const { addToCart, isInCart, getItemQuantity } = useCart();
+
   const router = useRouter();
-  const inCart = isInCart(product.id);
-  const cartQuantity = getItemQuantity(product.id);
 
   // Обработчик клика по карточке для навигации
   const handleCardClick = (e: React.MouseEvent) => {
@@ -254,46 +249,12 @@ export function ProductCard({
             <div className="flex-grow"></div>
 
             {/* Кнопка на всю ширину внизу */}
-            <Button
-              size="default" 
-              disabled={isAddingToCart}
-              className={cn(
-                "w-full rounded-xl py-3 text-sm font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] mt-auto",
-                inCart 
-                  ? "bg-forest-600 hover:bg-forest-700 text-white" 
-                  : "bg-lime-400 hover:bg-lime-500 text-forest-800"
-              )}
-              onClick={async (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                
-                if (!isAddingToCart) {
-                  setIsAddingToCart(true);
-                  addToCart({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    images: product.images,
-                    article: product.article,
-                    category: product.category
-                  }, 1);
-                  
-                  // Show feedback animation
-                  setTimeout(() => {
-                    setIsAddingToCart(false);
-                  }, 500);
-                }
-              }}
-            >
-              {isAddingToCart ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-              ) : inCart ? (
-                <Check className="w-4 h-4 mr-2" />
-              ) : (
-                <ShoppingCart className="w-4 h-4 mr-2" />
-              )}
-              {inCart ? `В корзине (${cartQuantity})` : 'В корзину'}
-            </Button>
+            <AddToCartButton
+              product={product}
+              quantity={1}
+              fullWidth
+              className="rounded-xl py-3 text-sm font-bold mt-auto"
+            />
           </div>
         </CardContent>
     </Card>

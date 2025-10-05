@@ -207,6 +207,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToCart = async (productOrId: string | any, quantity: number = 1) => {
+    // Требуем авторизацию для добавления в корзину
+    if (!session?.user) {
+      throw new Error('Требуется авторизация');
+    }
+
     try {
       let product;
       let productId;
@@ -215,7 +220,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (typeof productOrId === 'object' && productOrId.id) {
         product = productOrId;
         productId = productOrId.id;
-      } 
+      }
       // Если передана строка (ID), загружаем товар через API
       else if (typeof productOrId === 'string') {
         productId = productOrId;
@@ -249,14 +254,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Синхронизируем с сервером
-      if (session?.user) {
-        await syncWithServer('add', { productId, quantity });
-      }
+      await syncWithServer('add', { productId, quantity });
     } catch (error) {
       console.error('Ошибка добавления в корзину:', error);
-      toast.error('Не удалось добавить товар в корзину', {
-        description: 'Попробуйте еще раз',
-      });
+      if (!(error instanceof Error && error.message.includes('Требуется авторизация'))) {
+        toast.error('Не удалось добавить товар в корзину', {
+          description: 'Попробуйте еще раз',
+        });
+      }
+      throw error;
     }
   };
 
