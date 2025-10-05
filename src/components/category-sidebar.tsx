@@ -37,7 +37,7 @@ export function CategorySidebar({
         className={cn(
           "w-full justify-start text-left h-auto py-3 px-4 rounded-lg transition-all duration-200 border-0 text-sm font-normal",
           isSelected
-            ? "bg-lime-400 text-forest-900 hover:bg-lime-500 hover:text-forest-900 font-medium"
+            ? "bg-lime-100 text-forest-800 hover:bg-lime-200 hover:text-forest-800 font-medium"
             : "text-gray-700 hover:bg-gray-50 hover:text-forest-700"
         )}
         onClick={() => onCategoryClick(category)}
@@ -46,7 +46,7 @@ export function CategorySidebar({
           {category}
         </span>
         {isSelected && (
-          <div className="ml-auto w-2 h-2 bg-forest-900 rounded-full flex-shrink-0" />
+          <div className="ml-auto w-2 h-2 bg-lime-400 rounded-full flex-shrink-0" />
         )}
       </Button>
     );
