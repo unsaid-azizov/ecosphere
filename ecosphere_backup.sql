@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 xxx--
+=======
+--
+>>>>>>> c8499722d234a89c0b9294a56ae8960cf87e7a65
 -- PostgreSQL database dump
 --
 
