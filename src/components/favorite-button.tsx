@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button'
 import { useFavorites } from '@/contexts/favorites-context'
 import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
+import { LoginDialog } from '@/components/auth/login-dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { LogIn } from 'lucide-react'
 
 interface FavoriteButtonProps {
   productId: string
@@ -17,12 +20,13 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
   const { data: session } = useSession()
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites()
   const [isLoading, setIsLoading] = useState(false)
-  
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
+
   const isInFavorites = isFavorite(productId)
 
   const handleToggleFavorite = async () => {
     if (!session?.user) {
-      // Здесь можно показать модалку входа
+      setShowLoginDialog(true)
       return
     }
 
@@ -35,7 +39,6 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
       }
     } catch (error) {
       console.error('Ошибка изменения избранного:', error)
-      // Здесь можно показать toast с ошибкой
     } finally {
       setIsLoading(false)
     }
@@ -53,29 +56,29 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
     lg: 'w-5 h-5'
   }
 
-  return (
+  const favoriteButton = (
     <Button
       variant="ghost"
       size="sm"
       className={cn(
         'relative p-0 rounded-full transition-all duration-200 hover:scale-110',
         sizeClasses[size],
-        isInFavorites 
-          ? 'text-red-500 hover:text-red-600' 
+        isInFavorites
+          ? 'text-red-500 hover:text-red-600'
           : 'text-gray-400 hover:text-red-500',
         className
       )}
       onClick={handleToggleFavorite}
       disabled={isLoading}
     >
-      <Heart 
+      <Heart
         className={cn(
           iconSizes[size],
           'transition-all duration-200',
           isInFavorites ? 'fill-current' : ''
-        )} 
+        )}
       />
-      
+
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className={cn(
@@ -86,4 +89,30 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
       )}
     </Button>
   )
+
+  if (!session?.user && showLoginDialog) {
+    return (
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogTrigger asChild>
+          {favoriteButton}
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-emerald-600">
+              <LogIn className="w-5 h-5" />
+              Вход в аккаунт
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <p className="text-center text-gray-600">
+              Для добавления в избранное необходимо войти в аккаунт
+            </p>
+            <LoginDialog />
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  return favoriteButton
 }

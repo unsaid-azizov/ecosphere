@@ -7,6 +7,7 @@ import { LoginDialog } from '@/components/auth/login-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSession, signOut } from 'next-auth/react';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,8 +167,13 @@ export function Navbar() {
                       </>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        toast.info('До свидания!', {
+                          description: 'Вы вышли из аккаунта',
+                        });
+                        signOut({ callbackUrl: '/' });
+                      }}
                       className="flex items-center gap-2 text-red-600"
                     >
                       <LogOut className="w-4 h-4" />
@@ -280,6 +286,9 @@ export function Navbar() {
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
+                      toast.info('До свидания!', {
+                        description: 'Вы вышли из аккаунта',
+                      });
                       signOut({ callbackUrl: '/' });
                     }}
                     className="flex items-center gap-3 px-3 py-2 w-full text-left text-red-400 hover:text-red-300 hover:bg-forest-700 rounded-md transition-colors"

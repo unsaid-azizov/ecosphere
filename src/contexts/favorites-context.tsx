@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { toast } from 'sonner'
 
 interface FavoritesContextType {
   favorites: string[]
@@ -49,10 +50,15 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Требуется авторизация')
     }
 
-    // Оптимистичное обновление - сразу добавляем в UI
-    setFavorites(prev => [...prev, productId])
-
     try {
+      // Получаем данные товара для красивого уведомления
+      const productResponse = await fetch(`/api/products/${productId}`)
+      const product = productResponse.ok ? await productResponse.json() : null
+      const productName = product?.name || 'Товар'
+
+      // Оптимистичное обновление - сразу добавляем в UI
+      setFavorites(prev => [...prev, productId])
+
       const response = await fetch('/api/favorites', {
         method: 'POST',
         headers: {
@@ -65,12 +71,27 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         // Если ошибка, откатываем изменение
         setFavorites(prev => prev.filter(id => id !== productId))
         const error = await response.json()
+        toast.error('Не удалось добавить в избранное', {
+          description: error.error || 'Попробуйте еще раз'
+        })
         throw new Error(error.error || 'Ошибка добавления в избранное')
       }
+
+      // Показываем успешное уведомление
+      toast.success(`${productName} добавлен в избранное`, {
+        description: 'Товар сохранен в ваш список избранного',
+        duration: 2500,
+      })
+
     } catch (error) {
       console.error('Ошибка добавления в избранное:', error)
       // Если ошибка сети, также откатываем
       setFavorites(prev => prev.filter(id => id !== productId))
+      if (!(error instanceof Error && error.message.includes('Требуется авторизация'))) {
+        toast.error('Не удалось добавить в избранное', {
+          description: 'Проверьте подключение к интернету'
+        })
+      }
       throw error
     }
   }
@@ -80,11 +101,16 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Требуется авторизация')
     }
 
-    // Оптимистичное обновление - сразу удаляем из UI
-    const previousFavorites = favorites
-    setFavorites(prev => prev.filter(id => id !== productId))
-
     try {
+      // Получаем данные товара для красивого уведомления
+      const productResponse = await fetch(`/api/products/${productId}`)
+      const product = productResponse.ok ? await productResponse.json() : null
+      const productName = product?.name || 'Товар'
+
+      // Оптимистичное обновление - сразу удаляем из UI
+      const previousFavorites = favorites
+      setFavorites(prev => prev.filter(id => id !== productId))
+
       const response = await fetch(`/api/favorites?productId=${productId}`, {
         method: 'DELETE',
       })
@@ -93,12 +119,27 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         // Если ошибка, возвращаем обратно
         setFavorites(previousFavorites)
         const error = await response.json()
+        toast.error('Не удалось удалить из избранного', {
+          description: error.error || 'Попробуйте еще раз'
+        })
         throw new Error(error.error || 'Ошибка удаления из избранного')
       }
+
+      // Показываем уведомление об удалении
+      toast.info(`${productName} удален из избранного`, {
+        duration: 2000,
+      })
+
     } catch (error) {
       console.error('Ошибка удаления из избранного:', error)
       // Если ошибка сети, также возвращаем обратно
+      const previousFavorites = favorites
       setFavorites(previousFavorites)
+      if (!(error instanceof Error && error.message.includes('Требуется авторизация'))) {
+        toast.error('Не удалось удалить из избранного', {
+          description: 'Проверьте подключение к интернету'
+        })
+      }
       throw error
     }
   }

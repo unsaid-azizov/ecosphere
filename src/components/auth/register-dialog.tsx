@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, Building2, Store, Phone, Mail, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 type UserType = 'individual' | 'ip' | 'ooo';
 
@@ -79,15 +80,22 @@ export function RegisterDialog() {
 
       if (response.ok) {
         // Успешная регистрация
+        toast.success('Регистрация завершена!', {
+          description: 'Теперь вы можете войти в свой аккаунт',
+        });
         setOpen(false);
-        // Здесь можно добавить уведомление о успешной регистрации
       } else {
         // Ошибка регистрации
         console.error('Ошибка регистрации:', data.error);
-        // Здесь можно показать ошибку пользователю
+        toast.error('Ошибка регистрации', {
+          description: data.error || 'Попробуйте еще раз',
+        });
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
+      toast.error('Ошибка подключения', {
+        description: 'Проверьте подключение к интернету',
+      });
     } finally {
       setIsLoading(false);
     }

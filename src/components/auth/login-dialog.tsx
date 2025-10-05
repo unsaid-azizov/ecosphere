@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LogIn, Phone, Mail, MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface LoginFormData {
   email: string;
@@ -36,16 +37,24 @@ export function LoginDialog() {
 
       if (result?.ok) {
         // Успешный вход
+        toast.success('Добро пожаловать!', {
+          description: 'Вы успешно вошли в аккаунт',
+        });
         setOpen(false);
         // Здесь можно добавить redirect или обновление страницы
         window.location.reload();
       } else {
         // Ошибка входа
         console.error('Ошибка входа:', result?.error);
-        // Здесь можно показать ошибку пользователю
+        toast.error('Ошибка входа', {
+          description: 'Неверный email или пароль',
+        });
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
+      toast.error('Ошибка подключения', {
+        description: 'Проверьте подключение к интернету',
+      });
     } finally {
       setIsLoading(false);
     }

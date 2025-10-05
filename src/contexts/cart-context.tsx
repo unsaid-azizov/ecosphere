@@ -3,6 +3,7 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { CartItem, Cart, CartContextType } from '@/types/cart';
+import { toast } from 'sonner';
 // Убрали импорт data-client, будем получать товары через API
 
 // Cart reducer actions
@@ -241,12 +242,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       dispatch({ type: 'ADD_ITEM', payload: cartItem });
 
+      // Показываем тост с информацией о добавлении
+      toast.success(`${product.name} добавлен в корзину`, {
+        description: `Количество: ${quantity} шт.`,
+        duration: 2500,
+      });
+
       // Синхронизируем с сервером
       if (session?.user) {
         await syncWithServer('add', { productId, quantity });
       }
     } catch (error) {
       console.error('Ошибка добавления в корзину:', error);
+      toast.error('Не удалось добавить товар в корзину', {
+        description: 'Попробуйте еще раз',
+      });
     }
   };
 
@@ -269,7 +279,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = async (productId: string) => {
+    // Получаем название товара перед удалением
+    const item = state.items.find(item => item.id === productId);
+    const productName = item?.product?.name || 'Товар';
+
     dispatch({ type: 'REMOVE_ITEM', payload: { productId } });
+
+    // Показываем тост об удалении
+    toast.info(`${productName} удален из корзины`, {
+      duration: 2000,
+    });
 
     // Синхронизируем с сервером
     if (session?.user) {

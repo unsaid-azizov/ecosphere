@@ -5,6 +5,7 @@ import { OrdersProvider } from "@/contexts/orders-context";
 import { FavoritesProvider } from "@/contexts/favorites-context";
 // import { DiscountProvider } from "@/contexts/discount-context"; // ВРЕМЕННО ОТКЛЮЧЕНО
 import { SessionProvider } from "@/providers/session-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "ЭкоСфера - Каталог товаров для гостиниц",
@@ -24,6 +25,7 @@ export default function RootLayout({
             <CartProvider>
               <OrdersProvider>
                 {children}
+                <Toaster />
               </OrdersProvider>
             </CartProvider>
           </FavoritesProvider>

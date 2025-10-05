@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useCart } from '@/contexts/cart-context'
-import { ShoppingCart, CreditCard, Truck } from 'lucide-react'
+import { LoginDialog } from '@/components/auth/login-dialog'
+import { ShoppingCart, CreditCard, Truck, LogIn } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface CheckoutFormData {
   contactEmail: string
@@ -40,7 +42,7 @@ export function CheckoutDialog({ children }: CheckoutDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!session?.user) {
-      router.push('/login')
+      // This should not happen as we handle unauthenticated users in the render
       return
     }
 
@@ -67,18 +69,25 @@ export function CheckoutDialog({ children }: CheckoutDialogProps) {
         // Очищаем корзину после успешного заказа
         await clearCart()
         setOpen(false)
-        
+
         // Показываем успешное сообщение и переходим к заказам
-        alert(`Заказ ${order.orderNumber} успешно создан!`)
+        toast.success(`Заказ ${order.orderNumber} оформлен!`, {
+          description: 'Мы свяжемся с вами для подтверждения заказа',
+          duration: 4000,
+        })
         router.push('/orders')
       } else {
         const error = await response.json()
         console.error('Order creation error:', error)
-        alert(`Ошибка создания заказа: ${error.error}${error.details ? '\nДетали: ' + error.details : ''}`)
+        toast.error('Ошибка создания заказа', {
+          description: error.error || 'Попробуйте еще раз',
+        })
       }
     } catch (error) {
       console.error('Ошибка создания заказа:', error)
-      alert('Произошла ошибка при создании заказа')
+      toast.error('Ошибка подключения', {
+        description: 'Проверьте подключение к интернету',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -86,9 +95,28 @@ export function CheckoutDialog({ children }: CheckoutDialogProps) {
 
   if (!session?.user) {
     return (
-      <div onClick={() => router.push('/login')}>
-        {children}
-      </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-emerald-600">
+              <LogIn className="w-5 h-5" />
+              Вход в аккаунт
+            </DialogTitle>
+            <DialogDescription>
+              Войдите в свой аккаунт, чтобы оформить заказ
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <p className="text-center text-gray-600">
+              Для оформления заказа необходимо войти в аккаунт
+            </p>
+            <LoginDialog />
+          </div>
+        </DialogContent>
+      </Dialog>
     )
   }
 
