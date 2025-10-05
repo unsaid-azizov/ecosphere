@@ -113,7 +113,7 @@ export function CategorySidebar({
       <div className="lg:hidden">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="categories" className="border-forest-200">
-            <AccordionTrigger className="hover:no-underline text-forest-800 hover:text-forest-800 font-semibold">
+            <AccordionTrigger className="hover:no-underline text-forest-800 hover:text-forest-800 [&:hover]:text-forest-800 font-semibold">
               Категории {selectedCategories.length > 0 && `(${selectedCategories.length})`}
             </AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -187,7 +187,7 @@ export function CategorySidebar({
           <div className="lg:hidden mt-4">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="filters" className="border-forest-200">
-                <AccordionTrigger className="hover:no-underline text-forest-800 hover:text-forest-800 font-semibold py-3">
+                <AccordionTrigger className="hover:no-underline text-forest-800 hover:text-forest-800 [&:hover]:text-forest-800 font-semibold py-3">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
                     Активные фильтры ({(searchValue ? 1 : 0) + selectedCategories.length})
