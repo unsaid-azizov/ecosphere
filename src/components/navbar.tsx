@@ -39,17 +39,15 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 relative flex-shrink-0">
-              <Image
-                src="/icon.webp"
-                alt="ЭкоСфера"
-                width={40}
-                height={40}
-                className="rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-              />
-            </div>
-            <span className="text-xl font-bold text-white">ЭкоСфера</span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/icon.webp"
+              alt="ЭкоСфера"
+              width={40}
+              height={40}
+              className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
