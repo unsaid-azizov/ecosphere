@@ -1,20 +1,6 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Navbar } from '@/components/navbar';
-import Link from 'next/link';
-import { 
-  Calendar, 
-  Eye, 
-  ArrowLeft,
-  Tag,
-  Share2,
-  User
-} from 'lucide-react';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BlockRenderer } from '@/components/blog/block-renderer';
+import { BlogPostClient } from '@/components/blog/blog-post-client';
 import { BlogPost } from '@/types/blog';
 
 interface Post extends BlogPost {
@@ -22,256 +8,130 @@ interface Post extends BlogPost {
   publishedAt: string;
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 60 },
-  visible: { 
-    opacity: 1, 
-    y: 0
-  }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3
-    }
-  }
-};
-
-export default function BlogPostPage() {
-  const params = useParams();
-  const slug = params.slug as string;
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (slug) {
-      fetchPost();
-    }
-  }, [slug]);
-
-  const fetchPost = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/posts/${slug}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          notFound();
-        }
-        throw new Error('Ошибка загрузки поста');
-      }
-
-      const postData: Post = await response.json();
-      setPost(postData);
-    } catch (error) {
-      console.error('Error fetching post:', error);
-      setError('Ошибка загрузки поста');
-    } finally {
-      setLoading(false);
-    }
+interface PageProps {
+  params: {
+    slug: string;
   };
+}
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+// Generate metadata for SEO
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = params;
+
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts/${slug}`, {
+      cache: 'no-store'
     });
-  };
 
-  const getAuthorName = (author: Post['author']) => {
-    return `${author.firstName || ''} ${author.lastName || ''}`.trim() || 'Автор';
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: post?.title,
-        text: post?.excerpt || post?.title,
-        url: window.location.href,
-      });
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
+    if (!response.ok) {
+      return {
+        title: 'Пост не найден',
+      };
     }
+
+    const post: Post = await response.json();
+
+    return {
+      title: post.title,
+      description: post.excerpt || post.title,
+      keywords: post.tags.join(', '),
+      authors: [{ name: `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() }],
+      openGraph: {
+        title: post.title,
+        description: post.excerpt || post.title,
+        type: 'article',
+        publishedTime: post.publishedAt,
+        authors: [`${post.author.firstName || ''} ${post.author.lastName || ''}`.trim()],
+        images: post.coverImage ? [
+          {
+            url: post.coverImage,
+            width: 1200,
+            height: 630,
+            alt: post.title,
+          }
+        ] : [],
+        url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/blog/${slug}`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.excerpt || post.title,
+        images: post.coverImage ? [post.coverImage] : [],
+      },
+      alternates: {
+        canonical: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/blog/${slug}`,
+      },
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Ошибка загрузки поста',
+    };
+  }
+}
+
+// Server Component
+export default async function BlogPostPage({ params }: PageProps) {
+  const { slug } = params;
+
+  let post: Post | null = null;
+
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts/${slug}`, {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        notFound();
+      }
+      throw new Error('Ошибка загрузки поста');
+    }
+
+    post = await response.json();
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    notFound();
+  }
+
+  if (!post) {
+    notFound();
+  }
+
+  // Generate JSON-LD structured data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt || post.title,
+    image: post.coverImage || '',
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt,
+    author: {
+      '@type': 'Person',
+      name: `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() || 'Автор',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'ЭкоСфера',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/logo.png`,
+      },
+    },
+    keywords: post.tags.join(', '),
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-sage-50 via-white to-lime-50">
-        <Navbar />
-        <div className="container mx-auto max-w-4xl px-4 pt-32">
-          <div className="animate-pulse">
-            <div className="h-8 bg-forest-200 rounded w-1/4 mb-8"></div>
-            <div className="h-12 bg-forest-200 rounded w-3/4 mb-4"></div>
-            <div className="h-6 bg-forest-200 rounded w-1/2 mb-8"></div>
-            <div className="h-64 bg-forest-200 rounded-xl mb-8"></div>
-            <div className="space-y-4">
-              <div className="h-4 bg-forest-200 rounded"></div>
-              <div className="h-4 bg-forest-200 rounded w-5/6"></div>
-              <div className="h-4 bg-forest-200 rounded w-4/6"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !post) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-sage-50 via-white to-lime-50">
-        <Navbar />
-        <div className="container mx-auto max-w-4xl px-4 pt-32 text-center">
-          <h1 className="text-2xl font-bold text-forest-800 mb-4">Ошибка</h1>
-          <p className="text-forest-600 mb-8">{error}</p>
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 bg-lime-500 text-white px-6 py-3 rounded-lg hover:bg-lime-600 transition-colors duration-200"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Вернуться к блогу
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-white to-lime-50 relative overflow-hidden">
-      <Navbar />
+    <>
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.04, scale: 1.2 }}
-          transition={{ duration: 4, repeat: Infinity, repeatType: "reverse", ease: [0.25, 0.1, 0.25, 1] }}
-          className="absolute top-1/4 right-1/3 w-32 h-32 bg-gradient-to-r from-lime-200 to-forest-200 rounded-full"
-        />
-      </div>
-
-      <article className="relative pt-32 pb-16 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-          >
-            {/* Back Button */}
-            <motion.div variants={fadeInUp} className="mb-8">
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-2 text-forest-600 hover:text-lime-600 transition-colors duration-200 font-medium"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Назад к блогу
-              </Link>
-            </motion.div>
-
-            {/* Post Header */}
-            <motion.header variants={fadeInUp} className="mb-12">
-              {post.category && (
-                <div className="flex items-center gap-2 mb-4">
-                  <Tag className="w-4 h-4 text-lime-500" />
-                  <span className="text-sm font-medium text-lime-600 bg-lime-100 px-3 py-1 rounded-full">
-                    {post.category}
-                  </span>
-                </div>
-              )}
-
-              <h1 className="text-4xl md:text-5xl font-black text-forest-800 mb-6 leading-tight">
-                {post.title}
-              </h1>
-
-              {post.excerpt && (
-                <p className="text-xl text-forest-600 leading-relaxed mb-8">
-                  {post.excerpt}
-                </p>
-              )}
-
-              {/* Meta Information */}
-              <div className="flex items-center justify-between flex-wrap gap-4 py-6 border-t border-b border-forest-100">
-                <div className="flex items-center gap-6 text-sm text-forest-500">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span>{getAuthorName(post.author)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatDate(post.publishedAt)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    <span>{post.views} просмотров</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleShare}
-                  className="flex items-center gap-2 text-forest-600 hover:text-lime-600 transition-colors duration-200"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Поделиться</span>
-                </button>
-              </div>
-            </motion.header>
-
-            {/* Cover Image */}
-            {post.coverImage && (
-              <motion.div variants={fadeInUp} className="mb-12">
-                <div className="aspect-video rounded-2xl overflow-hidden shadow-xl">
-                  <img
-                    src={post.coverImage}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {/* Post Content */}
-            <motion.div
-              variants={fadeInUp}
-              className="mb-12 text-forest-700"
-            >
-              <BlockRenderer post={post} />
-            </motion.div>
-
-            {/* Tags */}
-            {post.tags.length > 0 && (
-              <motion.div variants={fadeInUp} className="mb-12">
-                <h3 className="text-lg font-semibold text-forest-800 mb-4">Теги:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-white/60 text-forest-600 rounded-full text-sm border border-forest-200"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Back to Blog CTA */}
-            <motion.div variants={fadeInUp} className="text-center pt-12 border-t border-forest-100">
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-2 bg-lime-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-lime-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Читать другие статьи
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </article>
-    </div>
+      {/* Client Component for interactivity */}
+      <BlogPostClient post={post} slug={slug} />
+    </>
   );
 }
