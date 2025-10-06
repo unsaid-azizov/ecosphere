@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingCart, Menu, X, Phone, Mail, MapPin, MessageCircle, History, User, LogOut, Heart, Settings } from 'lucide-react';
 import { RegisterDialog } from '@/components/auth/register-dialog';
 import { LoginDialog } from '@/components/auth/login-dialog';
@@ -39,8 +40,14 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-lime-400 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200">
-              <span className="text-white font-bold text-sm">Э</span>
+            <div className="w-10 h-10 relative flex-shrink-0">
+              <Image
+                src="/icon.webp"
+                alt="ЭкоСфера"
+                width={40}
+                height={40}
+                className="rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+              />
             </div>
             <span className="text-xl font-bold text-white">ЭкоСфера</span>
           </Link>
