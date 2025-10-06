@@ -10,6 +10,14 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: "ЭкоСфера - Каталог товаров для гостиниц",
   description: "Широкий ассортимент экологичных товаров для гостиничного бизнеса",
+  icons: {
+    icon: [
+      { url: '/icon.webp', sizes: '432x432', type: 'image/webp' },
+    ],
+    apple: [
+      { url: '/icon.webp', sizes: '432x432', type: 'image/webp' },
+    ],
+  },
 };
 
 export default function RootLayout({
