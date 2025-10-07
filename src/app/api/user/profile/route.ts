@@ -207,10 +207,11 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json(updatedUser);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating user profile:', error);
+    console.error('Error details:', error.message, error.stack);
     return NextResponse.json(
-      { message: 'Произошла ошибка при обновлении профиля' },
+      { message: 'Произошла ошибка при обновлении профиля', error: error.message },
       { status: 500 }
     );
   }
