@@ -84,6 +84,11 @@ export default function DashboardPage() {
 
         // Load product details for favorites
         const productPromises = favs.slice(0, 20).map(async (fav: any) => {
+          // Skip if productId is invalid
+          if (!fav.productId || fav.productId === 'undefined') {
+            return null;
+          }
+
           try {
             const prodRes = await fetch(`/api/products/${fav.productId}`);
             if (prodRes.ok) {
@@ -98,6 +103,7 @@ export default function DashboardPage() {
               };
             }
           } catch (err) {
+            console.error('Error loading favorite product:', err);
             return null;
           }
           return null;

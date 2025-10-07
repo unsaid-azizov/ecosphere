@@ -11,10 +11,8 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
 
   // Load orders from localStorage on mount
   useEffect(() => {
-    console.log('Loading orders from localStorage...');
     const savedOrders = localStorage.getItem('ecosphere-orders');
-    console.log('Saved orders from localStorage:', savedOrders);
-    
+
     if (savedOrders) {
       try {
         const parsedOrders = JSON.parse(savedOrders).map((order: any) => ({
@@ -22,29 +20,23 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date(order.createdAt),
           lastSentAt: order.lastSentAt ? new Date(order.lastSentAt) : undefined
         }));
-        console.log('Parsed orders:', parsedOrders);
         setOrders(parsedOrders);
       } catch (error) {
         console.error('Error loading orders from localStorage:', error);
       }
-    } else {
-      console.log('No orders found in localStorage');
     }
-    
+
     setIsLoaded(true);
   }, []);
 
   // Save orders to localStorage whenever orders change (but only after initial load)
   useEffect(() => {
     if (isLoaded) {
-      console.log('Saving orders to localStorage:', orders);
       localStorage.setItem('ecosphere-orders', JSON.stringify(orders));
     }
   }, [orders, isLoaded]);
 
   const saveOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'status' | 'sentCount'>): string => {
-    console.log('saveOrder called with:', orderData);
-    
     const newOrder: Order = {
       ...orderData,
       id: Date.now().toString(),
@@ -53,15 +45,8 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       sentCount: 0
     };
 
-    console.log('Creating new order:', newOrder);
-    
-    setOrders(prev => {
-      const newOrders = [newOrder, ...prev];
-      console.log('Updated orders:', newOrders);
-      return newOrders;
-    });
-    
-    console.log('Order saved with ID:', newOrder.id);
+    setOrders(prev => [newOrder, ...prev]);
+
     return newOrder.id;
   };
 
@@ -73,9 +58,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     const emailBody = formatOrderForEmail(order);
     const subject = encodeURIComponent(`🛒 ${order.sentCount > 0 ? 'Повторный заказ' : 'Новый заказ'} №${order.id} от ${order.customer.contactPerson}`);
     const emailUrl = `mailto:info@ecosphere.su?subject=${subject}&body=${emailBody}`;
-    
-    console.log('Attempting to open email with URL:', emailUrl);
-    
+
     try {
       // Try to open email client
       window.location.href = emailUrl;
