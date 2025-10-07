@@ -1,0 +1,15 @@
+# Allow all search engines to crawl
+User-agent: *
+Allow: /
+
+# Allow crawling of blog posts
+Allow: /blog/
+Allow: /catalog/
+Allow: /product/
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://ecosphere.spb.ru/sitemap.xml
