@@ -4,17 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Database, 
-  Users, 
-  ShoppingCart, 
-  Package, 
+import {
+  Database,
+  Users,
+  ShoppingCart,
+  Package,
   DollarSign,
   Shield,
   UserCheck,
   Settings,
   Info,
-  RefreshCw
+  RefreshCw,
+  Download
 } from 'lucide-react'
 
 interface SystemStats {
@@ -49,6 +50,11 @@ export function SettingsContent({ stats, currentUser }: SettingsContentProps) {
   const handleBackupDatabase = async () => {
     // Placeholder for database backup functionality
     alert('Резервное копирование запущено!')
+  }
+
+  const handleExportDatabase = () => {
+    // Direct navigation to trigger download
+    window.location.href = '/api/admin/export'
   }
 
   return (
@@ -200,22 +206,31 @@ export function SettingsContent({ stats, currentUser }: SettingsContentProps) {
             <div className="space-y-3">
               <h4 className="font-medium">Обслуживание системы</h4>
               <div className="space-y-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-start"
                   onClick={handleClearCache}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Очистить кэш
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="w-full justify-start"
                   onClick={handleBackupDatabase}
                 >
                   <Database className="h-4 w-4 mr-2" />
                   Резервное копирование БД
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleExportDatabase}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Экспорт базы данных (Excel)
                 </Button>
               </div>
             </div>
