@@ -66,7 +66,7 @@ export default function DashboardPage() {
       // Add orders to activities
       if (ordersRes.ok) {
         const orders = await ordersRes.json();
-        orders.slice(0, 5).forEach((order: any) => {
+        orders.slice(0, 20).forEach((order: any) => {
           activities.push({
             id: `order-${order.id}`,
             type: 'order',
@@ -82,7 +82,7 @@ export default function DashboardPage() {
         const favs = await favoritesRes.json();
 
         // Load product details for favorites
-        const productPromises = favs.slice(0, 5).map(async (fav: any) => {
+        const productPromises = favs.slice(0, 20).map(async (fav: any) => {
           try {
             const prodRes = await fetch(`/api/products/${fav.productId}`);
             if (prodRes.ok) {
@@ -106,9 +106,9 @@ export default function DashboardPage() {
         activities.push(...favoriteActivities);
       }
 
-      // Sort by date and take last 5
+      // Sort by date and take last 20
       activities.sort((a, b) => b.date.getTime() - a.date.getTime());
-      setRecentActivities(activities.slice(0, 5));
+      setRecentActivities(activities.slice(0, 20));
     } catch (error) {
       console.error('Ошибка загрузки активности:', error);
     } finally {
