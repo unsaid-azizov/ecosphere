@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Users, 
-  Package, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Users,
+  Package,
   Settings,
   Tag,
   LogOut,
@@ -17,11 +17,17 @@ import {
 } from 'lucide-react'
 import { UserRole } from '@prisma/client'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { signOut } from 'next-auth/react'
 
 interface AdminSidebarProps {
   userRole: UserRole
   onClose?: () => void
+}
+
+interface NotificationCounts {
+  pendingOrders: number
+  newUsers: number
 }
 
 const navigation = [
@@ -72,10 +78,31 @@ const navigation = [
 export function AdminSidebar({ userRole, onClose }: AdminSidebarProps) {
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
+  const [notifications, setNotifications] = useState<NotificationCounts>({
+    pendingOrders: 0,
+    newUsers: 0
+  })
 
   useEffect(() => {
     setMounted(true)
+    loadNotifications()
+
+    // Refresh notifications every 30 seconds
+    const interval = setInterval(loadNotifications, 30000)
+    return () => clearInterval(interval)
   }, [])
+
+  const loadNotifications = async () => {
+    try {
+      const response = await fetch('/api/admin/notifications')
+      if (response.ok) {
+        const data = await response.json()
+        setNotifications(data)
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+    }
+  }
 
   const filteredNavigation = navigation.filter(item => 
     item.roles.includes(userRole)
@@ -124,27 +151,42 @@ export function AdminSidebar({ userRole, onClose }: AdminSidebarProps) {
         {filteredNavigation.map((item, index) => {
           const isActive = pathname === item.href
           const Icon = item.icon
-          
+
+          // Get notification count for this item
+          let notificationCount = 0
+          if (item.href === '/admin/orders' && notifications.pendingOrders > 0) {
+            notificationCount = notifications.pendingOrders
+          } else if (item.href === '/admin/users' && notifications.newUsers > 0) {
+            notificationCount = notifications.newUsers
+          }
+
           return (
             <Link
               key={item.name}
               href={item.href}
               onClick={onClose}
               className={cn(
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2',
+                'group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2',
                 isActive
                   ? 'bg-emerald-500 text-white shadow-md transform scale-105'
                   : 'text-emerald-800 hover:bg-emerald-200/70 hover:text-emerald-900 hover:shadow-sm'
               )}
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <Icon
-                className={cn(
-                  'mr-3 h-5 w-5',
-                  isActive ? 'text-white' : 'text-emerald-700 group-hover:text-emerald-900'
-                )}
-              />
-              {item.name}
+              <div className="flex items-center">
+                <Icon
+                  className={cn(
+                    'mr-3 h-5 w-5',
+                    isActive ? 'text-white' : 'text-emerald-700 group-hover:text-emerald-900'
+                  )}
+                />
+                {item.name}
+              </div>
+              {notificationCount > 0 && (
+                <Badge className="bg-lime-400 text-lime-900 hover:bg-lime-400 ml-auto">
+                  {notificationCount > 99 ? '99+' : notificationCount}
+                </Badge>
+              )}
             </Link>
           )
         })}
