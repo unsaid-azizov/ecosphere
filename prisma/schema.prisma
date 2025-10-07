@@ -57,16 +57,45 @@ model User {
   lastName  String?
   phone     String?
 
-  // ИП
-  ipName String? // Наименование ИП
-
-  // ООО
-  companyName   String? // Наименование организации
-  legalAddress  String? // Юридический адрес
-
-  // Общие для ИП и ООО
+  // Общие поля (для всех типов)
   inn String? // ИНН
-  kpp String? // КПП (для ООО)
+
+  // ИП (Индивидуальный предприниматель)
+  ipFullName        String? // Полное наименование ИП
+  ipShortName       String? // Краткое наименование ИП
+  ipRegistrationAddress String? // Адрес регистрации
+  ipActualAddress   String? // Фактический адрес
+  ipOgrnip          String? // ОГРНИП
+  ipBankName        String? // Наименование банка
+  ipBik             String? // БИК
+  ipCorrAccount     String? // Корреспондентский счет
+  ipCheckingAccount String? // Расчетный счет
+  ipOkved           String? // ОКВЭД
+  ipTaxSystem       String? // Система налогообложения
+  ipVatStatus       String? // Уплата НДС
+
+  // ООО (Общество с ограниченной ответственностью)
+  oooFullName        String? // Полное наименование ООО
+  oooShortName       String? // Краткое наименование ООО
+  oooLegalAddress    String? // Юридический адрес
+  oooActualAddress   String? // Фактический адрес
+  kpp                String? // КПП (для ООО)
+  oooOgrn            String? // ОГРН
+  oooDirector        String? // Руководитель (должность, ФИО)
+  oooAccountant      String? // Главный бухгалтер
+  oooAuthorizedPerson String? // Лицо, уполномоченное подписывать договоры
+  oooBankName        String? // Наименование банка
+  oooBik             String? // БИК
+  oooCorrAccount     String? // Корреспондентский счет
+  oooCheckingAccount String? // Расчетный счет
+  oooOkved           String? // ОКВЭД
+  oooTaxSystem       String? // Система налогообложения
+  oooVatStatus       String? // Уплата НДС
+
+  // Устаревшие поля (для совместимости)
+  ipName        String? // Наименование ИП (deprecated)
+  companyName   String? // Наименование организации (deprecated)
+  legalAddress  String? // Юридический адрес (deprecated)
 
   // Скидки и специальные цены
   discountPercent Int     @default(0) // Процент скидки

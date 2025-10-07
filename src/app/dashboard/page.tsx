@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/navbar';
+import { ProfileEditDialog } from '@/components/profile-edit-dialog';
 import { User, Building2, Store, Package, Heart, ShoppingCart, History } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const { favorites } = useFavorites();
   const { cart } = useCart();
   const [ordersCount, setOrdersCount] = useState(0);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -144,7 +146,11 @@ export default function DashboardPage() {
                     <p className="font-medium">{userTypeInfo.description}</p>
                   </div>
                   <div className="pt-4 border-t">
-                    <Button variant="outline" className="w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowEditDialog(true)}
+                    >
                       Редактировать профиль
                     </Button>
                   </div>
@@ -280,6 +286,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
     </div>
   );
 }
