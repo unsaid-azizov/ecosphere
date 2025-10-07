@@ -12,6 +12,15 @@ import { Navbar } from '@/components/navbar';
 import { ProfileEditDialog } from '@/components/profile-edit-dialog';
 import { User, Building2, Store, Package, Heart, ShoppingCart, History } from 'lucide-react';
 
+interface Activity {
+  id: string;
+  type: 'order' | 'favorite';
+  title: string;
+  description: string;
+  date: Date;
+  productId?: string;
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -19,12 +28,15 @@ export default function DashboardPage() {
   const { cart } = useCart();
   const [ordersCount, setOrdersCount] = useState(0);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
     } else if (status === 'authenticated') {
       loadOrdersCount();
+      loadRecentActivities();
     }
   }, [status, router]);
 
@@ -37,6 +49,70 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Ошибка загрузки количества заказов:', error);
+    }
+  };
+
+  const loadRecentActivities = async () => {
+    setLoadingActivities(true);
+    try {
+      // Load orders and favorites
+      const [ordersRes, favoritesRes] = await Promise.all([
+        fetch('/api/orders'),
+        fetch('/api/favorites'),
+      ]);
+
+      const activities: Activity[] = [];
+
+      // Add orders to activities
+      if (ordersRes.ok) {
+        const orders = await ordersRes.json();
+        orders.slice(0, 5).forEach((order: any) => {
+          activities.push({
+            id: `order-${order.id}`,
+            type: 'order',
+            title: `Заказ #${order.orderNumber}`,
+            description: `${order.orderItems?.length || 0} товаров на сумму ${order.totalAmount} ₽`,
+            date: new Date(order.createdAt),
+          });
+        });
+      }
+
+      // Add favorites to activities
+      if (favoritesRes.ok) {
+        const favs = await favoritesRes.json();
+
+        // Load product details for favorites
+        const productPromises = favs.slice(0, 5).map(async (fav: any) => {
+          try {
+            const prodRes = await fetch(`/api/products/${fav.productId}`);
+            if (prodRes.ok) {
+              const product = await prodRes.json();
+              return {
+                id: `favorite-${fav.id}`,
+                type: 'favorite' as const,
+                title: 'Добавлено в избранное',
+                description: product.name,
+                date: new Date(fav.createdAt),
+                productId: fav.productId,
+              };
+            }
+          } catch (err) {
+            return null;
+          }
+          return null;
+        });
+
+        const favoriteActivities = (await Promise.all(productPromises)).filter(Boolean) as Activity[];
+        activities.push(...favoriteActivities);
+      }
+
+      // Sort by date and take last 5
+      activities.sort((a, b) => b.date.getTime() - a.date.getTime());
+      setRecentActivities(activities.slice(0, 5));
+    } catch (error) {
+      console.error('Ошибка загрузки активности:', error);
+    } finally {
+      setLoadingActivities(false);
     }
   };
 
@@ -272,15 +348,66 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle>Последняя активность</CardTitle>
                 <CardDescription>
-                  Ваши недавние действия в системе
+                  Ваши действия в системе
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Пока нет активности</p>
-                  <p className="text-sm">Начните с просмотра каталога товаров</p>
-                </div>
+                {loadingActivities ? (
+                  <div className="flex justify-center py-8">
+                    <div className="w-8 h-8 border-4 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin" />
+                  </div>
+                ) : recentActivities.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p>Пока нет активности</p>
+                    <p className="text-sm">Начните с просмотра каталога товаров</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recentActivities.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          if (activity.type === 'order') {
+                            router.push('/orders');
+                          } else if (activity.productId) {
+                            router.push(`/product/${activity.productId}`);
+                          }
+                        }}
+                      >
+                        <div className={`p-2 rounded-lg ${
+                          activity.type === 'order'
+                            ? 'bg-blue-100'
+                            : 'bg-pink-100'
+                        }`}>
+                          {activity.type === 'order' ? (
+                            <Package className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <Heart className="w-4 h-4 text-pink-600" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-gray-900">
+                            {activity.title}
+                          </p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {activity.description}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Intl.DateTimeFormat('ru-RU', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            }).format(activity.date)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
