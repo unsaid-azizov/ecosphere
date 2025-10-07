@@ -65,7 +65,7 @@ export function Navbar() {
             {/* Contacts Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-lime-100 hover:text-lime-300 px-3 py-2 text-sm font-medium">
+                <Button variant="ghost" className="text-lime-100 hover:text-lime-300 hover:bg-forest-700 px-3 py-2 text-sm font-medium">
                   Контакты
                 </Button>
               </DropdownMenuTrigger>
@@ -137,10 +137,10 @@ export function Navbar() {
               {session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 text-lime-100 hover:text-lime-300">
+                    <Button variant="ghost" className="flex items-center gap-2 text-lime-100 hover:text-lime-300 hover:bg-forest-700">
                       <User className="w-4 h-4" />
                       <span className="max-w-32 truncate">
-                        {session.user.firstName 
+                        {session.user.firstName
                           ? `${session.user.firstName} ${session.user.lastName || ''}`.trim()
                           : session.user.companyName || session.user.email
                         }
@@ -197,10 +197,10 @@ export function Navbar() {
 
             {/* Favorites */}
             <Link href="/favorites">
-              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300 hover:bg-forest-700">
                 <Heart className="w-4 h-4" />
                 {favorites.length > 0 && (
-                  <Badge 
+                  <Badge
                     className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-lime-400 text-white border-0 shadow-lg"
                   >
                     {favorites.length > 99 ? '99+' : favorites.length}
@@ -211,17 +211,17 @@ export function Navbar() {
 
             {/* History/Orders */}
             <Link href="/orders">
-              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300 hover:bg-forest-700">
                 <History className="w-4 h-4" />
               </Button>
             </Link>
 
             {/* Cart */}
             <Link href="/cart">
-              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300">
+              <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300 hover:bg-forest-700">
                 <ShoppingCart className="w-4 h-4" />
                 {cart.totalItems > 0 && (
-                  <Badge 
+                  <Badge
                     className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-forest-600 text-white border-0 shadow-lg animate-pulse"
                   >
                     {cart.totalItems > 99 ? '99+' : cart.totalItems}
@@ -234,7 +234,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden text-lime-100 hover:text-lime-300"
+              className="md:hidden text-lime-100 hover:text-lime-300 hover:bg-forest-700"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
