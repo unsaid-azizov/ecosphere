@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
+  const [showAllActivities, setShowAllActivities] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -364,7 +365,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {recentActivities.map((activity) => (
+                    {(showAllActivities ? recentActivities : recentActivities.slice(0, 10)).map((activity) => (
                       <div
                         key={activity.id}
                         className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
@@ -406,6 +407,28 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     ))}
+                    {!showAllActivities && recentActivities.length > 10 && (
+                      <div className="pt-2">
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setShowAllActivities(true)}
+                        >
+                          Показать еще ({recentActivities.length - 10})
+                        </Button>
+                      </div>
+                    )}
+                    {showAllActivities && recentActivities.length > 10 && (
+                      <div className="pt-2">
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setShowAllActivities(false)}
+                        >
+                          Скрыть
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
