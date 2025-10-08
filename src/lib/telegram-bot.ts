@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 
 // Store authenticated chat IDs in memory
-const authenticatedChats = new Map<number, { email: string; role: string; name: string }>();
+// Map<chatId, { email, role, name, userId }>
+const authenticatedChats = new Map<number, { email: string; role: string; name: string; userId: string }>();
 
 let bot: TelegramBot | null = null;
 let isInitializing = false;
@@ -51,10 +52,11 @@ export function initTelegramBot() {
     const chatId = msg.chat.id;
     bot?.sendMessage(
       chatId,
-      '🔐 Добро пожаловать в EcoSphere Admin Bot!\n\n' +
+      '🔐 Добро пожаловать в EcoSphere Notification Bot!\n\n' +
       'Для получения уведомлений войдите в систему:\n' +
       '/login your@email.com yourpassword\n\n' +
-      'Доступно только для администраторов и менеджеров.'
+      '👥 Пользователи получают уведомления о статусах своих заказов\n' +
+      '👨‍💼 Администраторы и менеджеры получают уведомления о новых заказах и пользователях'
     );
   });
 
@@ -75,8 +77,8 @@ export function initTelegramBot() {
         where: { email },
       });
 
-      if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
-        bot?.sendMessage(chatId, '❌ Доступ запрещен. Только для администраторов и менеджеров.');
+      if (!user) {
+        bot?.sendMessage(chatId, '❌ Пользователь не найден.');
         return;
       }
 
@@ -92,17 +94,28 @@ export function initTelegramBot() {
         email: user.email,
         role: user.role,
         name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email,
+        userId: user.id,
       });
+
+      const roleText = user.role === 'ADMIN' ? 'Администратор' : user.role === 'MANAGER' ? 'Менеджер' : 'Пользователь';
+
+      let notificationsList = '';
+      if (user.role === 'ADMIN' || user.role === 'MANAGER') {
+        notificationsList =
+          '• Новых зарегистрированных пользователях\n' +
+          '• Новых заказах от клиентов\n' +
+          '• Изменениях статусов заказов\n';
+      } else {
+        notificationsList = '• Изменениях статуса ваших заказов\n';
+      }
 
       bot?.sendMessage(
         chatId,
-        `✅ Вы успешно вошли как ${user.role === 'ADMIN' ? 'Администратор' : 'Менеджер'}!\n\n` +
+        `✅ Вы успешно вошли как ${roleText}!\n\n` +
         `👤 ${user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}\n\n` +
         'Теперь вы будете получать уведомления о:\n' +
-        '• Новых пользователях\n' +
-        '• Новых заказах\n' +
-        '• Изменениях статусов заказов\n' +
-        '• Критических событиях\n\n' +
+        notificationsList +
+        '\n' +
         'Команды:\n' +
         '/status - Проверить статус подключения\n' +
         '/logout - Выйти из системы'
@@ -236,9 +249,12 @@ export async function notifyNewOrder(order: {
 export async function notifyOrderStatusChange(order: {
   orderNumber: string;
   status: string;
+  userId: string;
   userEmail: string;
   userName?: string;
 }) {
+  if (!bot) return;
+
   const statusNames: Record<string, string> = {
     PENDING: '⏳ Ожидает обработки',
     CONFIRMED: '✅ Подтвержден',
@@ -248,13 +264,35 @@ export async function notifyOrderStatusChange(order: {
     CANCELLED: '❌ Отменен',
   };
 
-  const message =
+  // Message for admins/managers
+  const adminMessage =
     `🔄 <b>Изменение статуса заказа</b>\n\n` +
     `📋 Номер: #${order.orderNumber}\n` +
     `📊 Новый статус: ${statusNames[order.status] || order.status}\n` +
     `👤 Клиент: ${order.userName || order.userEmail}`;
 
-  await sendNotificationToAdmins(message);
+  // Message for order owner
+  const userMessage =
+    `🔔 <b>Статус вашего заказа изменился!</b>\n\n` +
+    `📋 Заказ: #${order.orderNumber}\n` +
+    `📊 Новый статус: ${statusNames[order.status] || order.status}`;
+
+  // Send to admins and managers
+  for (const [chatId, user] of authenticatedChats.entries()) {
+    try {
+      if (user.role === 'ADMIN' || user.role === 'MANAGER') {
+        await bot.sendMessage(chatId, adminMessage, { parse_mode: 'HTML' });
+      } else if (user.userId === order.userId) {
+        // Send to order owner
+        await bot.sendMessage(chatId, userMessage, { parse_mode: 'HTML' });
+      }
+    } catch (error) {
+      console.error(`Failed to send notification to ${user.email}:`, error);
+      if (error && typeof error === 'object' && 'code' in error && error.code === 403) {
+        authenticatedChats.delete(chatId);
+      }
+    }
+  }
 }
 
 export async function notifyCriticalEvent(event: string) {

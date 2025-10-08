@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { OrderStatus } from '@prisma/client'
+import { notifyOrderStatusChange } from '@/lib/telegram-bot'
 
 export async function PATCH(
   request: NextRequest,
@@ -47,16 +48,36 @@ export async function PATCH(
     // Update order status
     const updatedOrder = await prisma.order.update({
       where: { id: params.id },
-      data: { 
+      data: {
         status,
         updatedAt: new Date()
       },
       include: {
         user: {
-          select: { email: true }
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
         }
       }
     })
+
+    // Send Telegram notification to user and admins
+    try {
+      await notifyOrderStatusChange({
+        orderNumber: updatedOrder.orderNumber,
+        status: updatedOrder.status,
+        userId: updatedOrder.userId,
+        userEmail: updatedOrder.user.email,
+        userName: updatedOrder.user.firstName && updatedOrder.user.lastName
+          ? `${updatedOrder.user.firstName} ${updatedOrder.user.lastName}`
+          : undefined,
+      });
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+    }
 
     return NextResponse.json(updatedOrder)
   } catch (error) {
