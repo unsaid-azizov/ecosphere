@@ -19,25 +19,7 @@ export async function GET() {
 
     // Fetch all data from database
     const [users, orders, orderItems, products, favorites, cartItems, discounts, posts] = await Promise.all([
-      prisma.user.findMany({
-        select: {
-          id: true,
-          email: true,
-          userType: true,
-          role: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-          inn: true,
-          companyName: true,
-          ipFullName: true,
-          ipShortName: true,
-          oooFullName: true,
-          oooShortName: true,
-          createdAt: true,
-          updatedAt: true,
-        }
-      }),
+      prisma.user.findMany(), // Get ALL fields including password
       prisma.order.findMany({
         include: {
           user: {
@@ -72,21 +54,65 @@ export async function GET() {
     // Create workbook with multiple sheets
     const workbook = XLSX.utils.book_new();
 
-    // Add Users sheet
+    // Add Users sheet (ALL fields)
     const usersData = users.map(u => ({
       ID: u.id,
       Email: u.email,
+      Password: u.password, // Hashed password
       'Тип': u.userType,
       'Роль': u.role,
+
+      // Физ. лицо
       'Имя': u.firstName || '',
       'Фамилия': u.lastName || '',
       'Телефон': u.phone || '',
+
+      // Общие
       'ИНН': u.inn || '',
-      'Компания': u.companyName || '',
-      'ИП Полное': u.ipFullName || '',
-      'ИП Краткое': u.ipShortName || '',
-      'ООО Полное': u.oooFullName || '',
-      'ООО Краткое': u.oooShortName || '',
+
+      // ИП
+      'ИП Полное имя': u.ipFullName || '',
+      'ИП Краткое имя': u.ipShortName || '',
+      'ИП Адрес регистрации': u.ipRegistrationAddress || '',
+      'ИП Фактический адрес': u.ipActualAddress || '',
+      'ИП ОГРНИП': u.ipOgrnip || '',
+      'ИП Банк': u.ipBankName || '',
+      'ИП БИК': u.ipBik || '',
+      'ИП Корр. счет': u.ipCorrAccount || '',
+      'ИП Расчетный счет': u.ipCheckingAccount || '',
+      'ИП ОКВЭД': u.ipOkved || '',
+      'ИП Налоговая система': u.ipTaxSystem || '',
+      'ИП НДС': u.ipVatStatus || '',
+
+      // ООО
+      'ООО Полное имя': u.oooFullName || '',
+      'ООО Краткое имя': u.oooShortName || '',
+      'ООО Юридический адрес': u.oooLegalAddress || '',
+      'ООО Фактический адрес': u.oooActualAddress || '',
+      'КПП': u.kpp || '',
+      'ООО ОГРН': u.oooOgrn || '',
+      'ООО Директор': u.oooDirector || '',
+      'ООО Бухгалтер': u.oooAccountant || '',
+      'ООО Уполномоченное лицо': u.oooAuthorizedPerson || '',
+      'ООО Банк': u.oooBankName || '',
+      'ООО БИК': u.oooBik || '',
+      'ООО Корр. счет': u.oooCorrAccount || '',
+      'ООО Расчетный счет': u.oooCheckingAccount || '',
+      'ООО ОКВЭД': u.oooOkved || '',
+      'ООО Налоговая система': u.oooTaxSystem || '',
+      'ООО НДС': u.oooVatStatus || '',
+
+      // Устаревшие
+      'ИП Имя (старое)': u.ipName || '',
+      'Компания (старое)': u.companyName || '',
+      'Юр. адрес (старое)': u.legalAddress || '',
+
+      // Скидки
+      'Процент скидки': u.discountPercent,
+      'VIP': u.isVip ? 'Да' : 'Нет',
+      'Баллы лояльности': u.loyaltyPoints,
+
+      // Даты
       'Создан': u.createdAt.toISOString(),
       'Обновлен': u.updatedAt.toISOString(),
     }));
