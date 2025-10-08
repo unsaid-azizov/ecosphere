@@ -6,6 +6,9 @@ import { ProductCard } from '@/components/product-card';
 import { BannerCarousel } from '@/components/banner-carousel';
 import { useProducts } from '@/hooks/use-products';
 import { type ServerDiscountResult } from '@/lib/server-discounts';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface CatalogClientProps {
   discounts: ServerDiscountResult[]
@@ -97,6 +100,61 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
     setFilters({ ...filters, search: '' });
   };
 
+  const handleExportCatalog = () => {
+    try {
+      // Prepare data for export
+      const exportData = filteredProducts.map(product => {
+        const discount = getProductDiscount(product.id);
+        const finalPrice = discount
+          ? product.price * (1 - discount.discountPercent / 100)
+          : product.price;
+
+        return {
+          'Артикул': product.article,
+          'Название': product.name,
+          'Описание': product.description || '',
+          'Категория': product.category,
+          'Цена': product.price,
+          'Скидка %': discount?.discountPercent || 0,
+          'Цена со скидкой': finalPrice,
+          'Название скидки': discount?.discountName || '',
+          'Количество': product.stockQuantity,
+          'Доступен': product.isAvailable ? 'Да' : 'Нет',
+        };
+      });
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Каталог');
+
+      // Generate Excel file
+      const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+
+      // Create blob and download
+      const blob = new Blob([excelBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `catalog-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+    } catch (error) {
+      console.error('Error exporting catalog:', error);
+      alert('Ошибка при экспорте каталога');
+    }
+  };
+
   return (
     <div className="space-y-8">
       <BannerCarousel />
@@ -118,14 +176,27 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
 
         {/* Основной контент */}
         <div className="space-y-8">
-          <CatalogFilters
-            categories={categories}
-            priceRange={priceRange}
-            filters={filters}
-            onFiltersChange={setFilters}
-            totalProducts={products.length}
-            filteredCount={filteredProducts.length}
-          />
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CatalogFilters
+              categories={categories}
+              priceRange={priceRange}
+              filters={filters}
+              onFiltersChange={setFilters}
+              totalProducts={products.length}
+              filteredCount={filteredProducts.length}
+            />
+
+            {filteredProducts.length > 0 && (
+              <Button
+                onClick={handleExportCatalog}
+                variant="outline"
+                className="flex items-center gap-2 bg-white hover:bg-lime-50 border-lime-300 text-forest-800"
+              >
+                <Download className="h-4 w-4" />
+                Экспорт ({filteredProducts.length})
+              </Button>
+            )}
+          </div>
 
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16">

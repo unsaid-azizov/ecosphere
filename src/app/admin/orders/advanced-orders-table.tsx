@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -77,6 +77,15 @@ const statusColors = {
   CANCELLED: 'bg-red-100 text-red-800'
 }
 
+const statusRowColors = {
+  PENDING: 'bg-yellow-100/50 hover:bg-yellow-100',
+  CONFIRMED: 'bg-sky-100/50 hover:bg-sky-100',
+  PROCESSING: 'bg-violet-100/50 hover:bg-violet-100',
+  SHIPPED: 'bg-amber-100/50 hover:bg-amber-100',
+  DELIVERED: 'bg-emerald-100/50 hover:bg-emerald-100',
+  CANCELLED: 'bg-rose-100/50 hover:bg-rose-100'
+}
+
 const statusIcons = {
   PENDING: Clock,
   CONFIRMED: CheckCircle,
@@ -91,6 +100,11 @@ export function AdvancedOrdersTable({ orders, userRole }: AdvancedOrdersTablePro
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Фильтрация заказов
   const filteredOrders = orders.filter(order => {
@@ -266,7 +280,7 @@ export function AdvancedOrdersTable({ orders, userRole }: AdvancedOrdersTablePro
                 {filteredOrders.map((order) => {
                   const StatusIcon = statusIcons[order.status]
                   return (
-                    <TableRow key={order.id}>
+                    <TableRow key={order.id} className={statusRowColors[order.status]}>
                       <TableCell className="font-medium">
                         {order.orderNumber}
                       </TableCell>
@@ -345,7 +359,7 @@ export function AdvancedOrdersTable({ orders, userRole }: AdvancedOrdersTablePro
                           {new Date(order.createdAt).toLocaleDateString('ru-RU')}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleTimeString('ru-RU')}
+                          {mounted ? new Date(order.createdAt).toLocaleTimeString('ru-RU') : '--:--:--'}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
