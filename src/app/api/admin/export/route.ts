@@ -17,38 +17,16 @@ export async function GET() {
 
     console.log('Starting database export...');
 
-    // Fetch all data from database
+    // Fetch all data from database - ALL FIELDS, NO EXCLUSIONS
     const [users, orders, orderItems, products, favorites, cartItems, discounts, posts] = await Promise.all([
-      prisma.user.findMany(), // Get ALL fields including password
-      prisma.order.findMany({
-        include: {
-          user: {
-            select: {
-              email: true,
-              firstName: true,
-              lastName: true,
-            }
-          }
-        }
-      }),
-      prisma.orderItem.findMany(),
-      prisma.product.findMany(),
-      prisma.favorite.findMany(),
-      prisma.cartItem.findMany(),
-      prisma.personalDiscount.findMany(),
-      prisma.post.findMany({
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          status: true,
-          category: true,
-          views: true,
-          publishedAt: true,
-          createdAt: true,
-          updatedAt: true,
-        }
-      }),
+      prisma.user.findMany(), // ALL fields
+      prisma.order.findMany(), // ALL fields
+      prisma.orderItem.findMany(), // ALL fields
+      prisma.product.findMany(), // ALL fields
+      prisma.favorite.findMany(), // ALL fields
+      prisma.cartItem.findMany(), // ALL fields
+      prisma.personalDiscount.findMany(), // ALL fields
+      prisma.post.findMany(), // ALL fields
     ]);
 
     // Create workbook with multiple sheets
@@ -118,18 +96,16 @@ export async function GET() {
     }));
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(usersData), 'Пользователи');
 
-    // Add Orders sheet
+    // Add Orders sheet (ALL fields)
     const ordersData = orders.map(o => ({
       ID: o.id,
-      'Номер': o.orderNumber,
+      'Номер заказа': o.orderNumber,
       'ID Пользователя': o.userId,
-      'Email Пользователя': o.user.email,
-      'Имя': o.user.firstName && o.user.lastName ? `${o.user.firstName} ${o.user.lastName}` : '',
       'Статус': o.status,
-      'Сумма': o.totalAmount,
-      'Email': o.contactEmail,
-      'Телефон': o.contactPhone || '',
-      'Адрес': o.deliveryAddress || '',
+      'Общая сумма': o.totalAmount,
+      'Email контакта': o.contactEmail,
+      'Телефон контакта': o.contactPhone || '',
+      'Адрес доставки': o.deliveryAddress || '',
       'Создан': o.createdAt.toISOString(),
       'Обновлен': o.updatedAt.toISOString(),
     }));
@@ -185,7 +161,7 @@ export async function GET() {
     }));
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(cartData), 'Корзины');
 
-    // Add Discounts sheet
+    // Add Discounts sheet (ALL fields)
     const discountsData = discounts.map(d => ({
       ID: d.id,
       'Название': d.name,
@@ -195,23 +171,35 @@ export async function GET() {
       'Тип скидки': d.discountType,
       'ID Товара': d.productId || '',
       'Категория': d.category || '',
-      'Процент': d.discountPercent,
+      'Процент скидки': d.discountPercent,
       'Действует с': d.validFrom.toISOString(),
       'Действует до': d.validUntil ? d.validUntil.toISOString() : '',
       'Активна': d.isActive ? 'Да' : 'Нет',
+      'ID Создателя': d.createdBy,
       'Создан': d.createdAt.toISOString(),
       'Обновлен': d.updatedAt.toISOString(),
     }));
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(discountsData), 'Скидки');
 
-    // Add Posts sheet
+    // Add Posts sheet (ALL fields)
     const postsData = posts.map(p => ({
       ID: p.id,
       'Заголовок': p.title,
       'Slug': p.slug,
+      'Анонс': p.excerpt || '',
+      'Содержание': p.content,
+      'Тип контента': p.contentType,
+      'Блоки': p.blocks ? JSON.stringify(p.blocks) : '',
+      'Обложка': p.coverImage || '',
+      'Изображения': p.images.join('; '),
       'Статус': p.status,
-      'Категория': p.category || '',
+      'Рекомендуемый': p.featured ? 'Да' : 'Нет',
       'Просмотры': p.views,
+      'Категория': p.category || '',
+      'Теги': p.tags.join(', '),
+      'SEO Заголовок': p.metaTitle || '',
+      'SEO Описание': p.metaDescription || '',
+      'ID Автора': p.authorId,
       'Опубликован': p.publishedAt ? p.publishedAt.toISOString() : '',
       'Создан': p.createdAt.toISOString(),
       'Обновлен': p.updatedAt.toISOString(),
