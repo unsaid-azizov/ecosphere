@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { UserType } from '@prisma/client'
+import { notifyNewUser } from '@/lib/telegram-bot'
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,12 +78,26 @@ export async function POST(request: NextRequest) {
         id: true,
         email: true,
         userType: true,
+        role: true,
         firstName: true,
         lastName: true,
         companyName: true,
         createdAt: true,
       }
     })
+
+    // Send Telegram notification
+    try {
+      await notifyNewUser({
+        email: user.email,
+        role: user.role,
+        userType: user.userType,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+      });
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+    }
 
     return NextResponse.json(
       { 

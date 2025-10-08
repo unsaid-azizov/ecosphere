@@ -145,11 +145,21 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
 
       const result = await response.json()
 
-      if (!response.ok) {
+      if (!response.ok && response.status !== 207) {
         setErrorMessages(result.errors || [result.error || 'Неизвестная ошибка'])
         setErrorDialogOpen(true)
       } else {
-        alert(`Импорт успешно завершен!\n\n${result.imported?.map((item: any) => `${item.table}: ${item.count}\n${item.details || ''}`).join('\n')}`)
+        // Show success message
+        const importSummary = result.imported?.map((item: any) => `${item.table}: ${item.count}\n${item.details || ''}`).join('\n') || ''
+
+        // If there are errors/warnings, show them
+        if (result.errors && result.errors.length > 0) {
+          const warningMessage = `Импорт завершен с предупреждениями:\n\n${importSummary}\n\nПредупреждения:\n${result.errors.slice(0, 10).join('\n')}${result.errors.length > 10 ? `\n\n...и еще ${result.errors.length - 10} предупреждений` : ''}`
+          alert(warningMessage)
+        } else {
+          alert(`Импорт успешно завершен!\n\n${importSummary}`)
+        }
+
         window.location.reload()
       }
     } catch (error) {

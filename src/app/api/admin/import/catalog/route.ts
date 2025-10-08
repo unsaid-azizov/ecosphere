@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
     let importedCount = 0;
     let updatedCount = 0;
     let createdCount = 0;
+    let skippedCount = 0;
 
     for (const row of data) {
       try {
@@ -74,36 +75,75 @@ export async function POST(req: NextRequest) {
           price: parseFloat(row['Цена']),
           category: row['Категория'],
           article: row['Артикул'],
-          stockQuantity: parseInt(row['Количество']),
+          stockQuantity: parseInt(row['Количество']) || 0,
           isAvailable: row['Доступен'] === 'Да',
           images: row['Изображения'] ? row['Изображения'].split('; ').filter(Boolean) : [],
         };
 
-        // Check if product exists
-        const existing = await prisma.product.findUnique({
-          where: { id: row['ID'] },
+        // Validate required fields
+        if (!productData.name || !productData.category || !productData.article) {
+          skippedCount++;
+          errors.push(`Пропущена строка: отсутствуют обязательные поля (Название, Категория или Артикул)`);
+          continue;
+        }
+
+        if (isNaN(productData.price)) {
+          skippedCount++;
+          errors.push(`Пропущена строка "${productData.name}": неверная цена`);
+          continue;
+        }
+
+        // If ID is provided, check if product exists by ID
+        if (row['ID']) {
+          const productId = String(row['ID']); // Convert to string for Prisma
+          const existing = await prisma.product.findUnique({
+            where: { id: productId },
+          });
+
+          if (existing) {
+            console.log('Updating existing product ID:', productId, 'Article:', row['Артикул']);
+            await prisma.product.update({
+              where: { id: productId },
+              data: productData,
+            });
+            updatedCount++;
+            importedCount++;
+            continue;
+          }
+        }
+
+        // No ID or ID doesn't exist - check by article
+        const existingByArticle = await prisma.product.findFirst({
+          where: { article: row['Артикул'] },
         });
 
-        if (existing) {
+        if (existingByArticle) {
+          // Update existing product by article
+          console.log('Updating product by article:', row['Артикул'], 'ID:', existingByArticle.id);
           await prisma.product.update({
-            where: { id: row['ID'] },
+            where: { id: existingByArticle.id },
             data: productData,
           });
           updatedCount++;
         } else {
+          // Create new product with ID from row or auto-generated
+          const newId = row['ID'] ? String(row['ID']) : `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          console.log('Creating new product with ID:', newId, 'Article:', row['Артикул']);
           await prisma.product.create({
             data: {
-              id: row['ID'],
+              id: newId,
               ...productData,
             },
           });
           createdCount++;
+          console.log('Successfully created product:', newId);
         }
 
         importedCount++;
       } catch (rowError) {
         console.error(`Error importing row:`, row, rowError);
         errors.push(`Ошибка в строке с ID ${row['ID']}: ${rowError instanceof Error ? rowError.message : 'Unknown error'}`);
+        skippedCount++;
       }
     }
 
@@ -114,7 +154,7 @@ export async function POST(req: NextRequest) {
           imported: [{
             table: 'Товары',
             count: importedCount,
-            details: `Создано: ${createdCount}, Обновлено: ${updatedCount}`,
+            details: `Создано: ${createdCount}, Обновлено: ${updatedCount}, Пропущено: ${skippedCount}`,
           }],
         },
         { status: 207 } // Multi-status
@@ -127,7 +167,7 @@ export async function POST(req: NextRequest) {
       imported: [{
         table: 'Товары',
         count: importedCount,
-        details: `Создано: ${createdCount}, Обновлено: ${updatedCount}`,
+        details: `Создано: ${createdCount}, Обновлено: ${updatedCount}${skippedCount > 0 ? `, Пропущено: ${skippedCount}` : ''}`,
       }],
     });
   } catch (error) {

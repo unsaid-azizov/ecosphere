@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyNewOrder } from '@/lib/telegram-bot'
 
 // GET - получить заказы пользователя
 export async function GET(request: NextRequest) {
@@ -144,6 +145,32 @@ export async function POST(request: NextRequest) {
 
       return { ...newOrder, orderItems }
     })
+
+    // Send Telegram notification
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { email: true, firstName: true, lastName: true },
+      });
+
+      await notifyNewOrder({
+        orderNumber: order.orderNumber,
+        totalAmount: order.totalAmount,
+        userEmail: user?.email || session.user.email,
+        userName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : undefined,
+        itemsCount: order.orderItems.length,
+        items: order.orderItems.map(item => ({
+          name: item.productName,
+          article: item.productArticle,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        contactPhone: order.contactPhone || undefined,
+        deliveryAddress: order.deliveryAddress || undefined,
+      });
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+    }
 
     return NextResponse.json(order, { status: 201 })
   } catch (error) {
