@@ -29,8 +29,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Search, Package, AlertTriangle, CheckCircle, Edit, Eye, Plus, Save, X, Trash2 } from 'lucide-react'
+import { Search, Package, AlertTriangle, CheckCircle, Edit, Eye, Plus, Save, X, Trash2, Download, Upload } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
+import { useRef } from 'react'
 
 interface Product {
   id: string
@@ -69,6 +70,10 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
   const [loading, setLoading] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false)
+  const [errorMessages, setErrorMessages] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Получение уникальных категорий
   const categories = Array.from(new Set(products.map(p => p.category)))
@@ -106,6 +111,56 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
     } catch (error) {
       console.error('Error updating availability:', error)
       alert('Ошибка при изменении доступности')
+    }
+  }
+
+  const handleExportCatalog = () => {
+    window.location.href = '/api/admin/export/catalog'
+  }
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      setErrorMessages(['Пожалуйста, выберите Excel файл (.xlsx или .xls)'])
+      setErrorDialogOpen(true)
+      return
+    }
+
+    setIsImporting(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/admin/import/catalog', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        setErrorMessages(result.errors || [result.error || 'Неизвестная ошибка'])
+        setErrorDialogOpen(true)
+      } else {
+        alert(`Импорт успешно завершен!\n\n${result.imported?.map((item: any) => `${item.table}: ${item.count}\n${item.details || ''}`).join('\n')}`)
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Error importing catalog:', error)
+      setErrorMessages(['Ошибка при импорте каталога. Проверьте формат файла.'])
+      setErrorDialogOpen(true)
+    } finally {
+      setIsImporting(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -248,6 +303,40 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Import/Export Buttons */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={handleExportCatalog}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Экспорт каталога (Excel)
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleImportClick}
+              disabled={isImporting}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {isImporting ? 'Импортирование...' : 'Импорт каталога (Excel)'}
+            </Button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card>
@@ -910,6 +999,33 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
               disabled={loading}
             >
               {loading ? 'Удаление...' : 'Удалить'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Error Dialog */}
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Ошибка импорта
+            </DialogTitle>
+            <DialogDescription>
+              При импорте каталога произошли следующие ошибки:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {errorMessages.map((error, index) => (
+              <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
+                {error}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setErrorDialogOpen(false)}>
+              Закрыть
             </Button>
           </DialogFooter>
         </DialogContent>

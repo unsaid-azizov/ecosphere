@@ -1,17 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   Database,
   Users,
@@ -22,9 +14,7 @@ import {
   UserCheck,
   Settings,
   Info,
-  Download,
-  Upload,
-  AlertCircle
+  Download
 } from 'lucide-react'
 
 interface SystemStats {
@@ -51,62 +41,9 @@ interface SettingsContentProps {
 }
 
 export function SettingsContent({ stats, currentUser }: SettingsContentProps) {
-  const [isImporting, setIsImporting] = useState(false)
-  const [errorDialogOpen, setErrorDialogOpen] = useState(false)
-  const [errorMessages, setErrorMessages] = useState<string[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   const handleExportDatabase = () => {
-    // Direct navigation to trigger download
+    // Direct navigation to trigger full database download
     window.location.href = '/api/admin/export'
-  }
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-      setErrorMessages(['Пожалуйста, выберите Excel файл (.xlsx или .xls)'])
-      setErrorDialogOpen(true)
-      return
-    }
-
-    setIsImporting(true)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/admin/import', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        setErrorMessages(result.errors || [result.error || 'Неизвестная ошибка'])
-        setErrorDialogOpen(true)
-      } else {
-        alert(`Импорт успешно завершен!\n\nИмпортировано:\n${result.imported?.map((item: any) => `- ${item.table}: ${item.count}`).join('\n')}`)
-        window.location.reload()
-      }
-    } catch (error) {
-      console.error('Error importing database:', error)
-      setErrorMessages(['Ошибка при импорте базы данных. Проверьте формат файла.'])
-      setErrorDialogOpen(true)
-    } finally {
-      setIsImporting(false)
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
   }
 
   return (
@@ -256,7 +193,7 @@ export function SettingsContent({ stats, currentUser }: SettingsContentProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              <h4 className="font-medium">Управление данными</h4>
+              <h4 className="font-medium">Резервное копирование</h4>
               <div className="space-y-2">
                 <Button
                   variant="outline"
@@ -264,26 +201,11 @@ export function SettingsContent({ stats, currentUser }: SettingsContentProps) {
                   onClick={handleExportDatabase}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Экспорт базы данных (Excel)
+                  Экспорт всей базы данных (Excel)
                 </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={handleImportClick}
-                  disabled={isImporting}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isImporting ? 'Импортирование...' : 'Импортировать базу данных (Excel)'}
-                </Button>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
+                <p className="text-xs text-muted-foreground">
+                  Скачать полную базу данных со всеми таблицами
+                </p>
               </div>
             </div>
 
@@ -345,32 +267,6 @@ export function SettingsContent({ stats, currentUser }: SettingsContentProps) {
         </CardContent>
       </Card>
 
-      {/* Error Dialog */}
-      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              Ошибка импорта
-            </DialogTitle>
-            <DialogDescription>
-              При импорте базы данных произошли следующие ошибки:
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            {errorMessages.map((error, index) => (
-              <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
-                {error}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={() => setErrorDialogOpen(false)}>
-              Закрыть
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
