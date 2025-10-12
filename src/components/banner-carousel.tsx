@@ -57,12 +57,11 @@ export function BannerCarousel() {
         opts={{
           align: "start",
           loop: true,
-          dragFree: true,
         }}
       >
-        <CarouselContent className="-ml-2 md:-ml-4">
+        <CarouselContent>
           {bannerImages.map((image, index) => (
-            <CarouselItem key={index} className="pl-2 md:pl-4">
+            <CarouselItem key={index}>
               <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg">
                 <Image
                   src={image}
