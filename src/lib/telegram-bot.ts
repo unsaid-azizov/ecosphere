@@ -82,6 +82,12 @@ export function initTelegramBot() {
         return;
       }
 
+      // Guest users cannot authenticate via Telegram
+      if (user.isGuest || !user.password) {
+        bot?.sendMessage(chatId, '❌ Гостевые пользователи не могут войти через Telegram.');
+        return;
+      }
+
       const isValid = await bcrypt.compare(password, user.password);
 
       if (!isValid) {
