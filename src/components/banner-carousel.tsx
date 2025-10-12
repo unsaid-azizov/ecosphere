@@ -57,11 +57,12 @@ export function BannerCarousel() {
         opts={{
           align: "start",
           loop: true,
+          dragFree: true,
         }}
       >
-        <CarouselContent>
+        <CarouselContent className="-ml-2 md:-ml-4">
           {bannerImages.map((image, index) => (
-            <CarouselItem key={index}>
+            <CarouselItem key={index} className="pl-2 md:pl-4">
               <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg">
                 <Image
                   src={image}
@@ -74,8 +75,8 @@ export function BannerCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
-        <CarouselNext className="right-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
+        <CarouselPrevious className="hidden md:flex left-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
+        <CarouselNext className="hidden md:flex right-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
       </Carousel>
     </div>
   );
