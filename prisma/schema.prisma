@@ -46,9 +46,10 @@ enum PostStatus {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String
+  password  String?  // Nullable for guest users
   userType  UserType
   role      UserRole @default(USER)
+  isGuest   Boolean  @default(false) // Guest users flag
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
