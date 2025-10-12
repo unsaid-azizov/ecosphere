@@ -35,7 +35,7 @@ export function BannerCarousel() {
 
   if (loading) {
     return (
-      <div className="w-full mb-8">
+      <div className="w-full mb-8 hidden md:block">
         <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg bg-gray-200 animate-pulse" />
       </div>
     );
