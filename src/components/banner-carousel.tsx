@@ -46,37 +46,42 @@ export function BannerCarousel() {
   }
 
   return (
-    <div className="w-full mb-8 hidden md:block">
-      <Carousel
-        className="w-full"
-        plugins={[
-          Autoplay({
-            delay: 4000,
-          }),
-        ]}
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-      >
-        <CarouselContent>
-          {bannerImages.map((image, index) => (
-            <CarouselItem key={index}>
-              <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg">
-                <Image
-                  src={image}
-                  alt={`Banner ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={index === 0}
-                />
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="left-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
-        <CarouselNext className="right-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
-      </Carousel>
+    <div className="w-full mb-8 hidden md:block relative">
+      {/* Decorative gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-lime-50 via-sage-50 to-lime-50 rounded-2xl -z-10 blur-2xl opacity-50" />
+
+      <div className="relative p-2 bg-white/40 backdrop-blur-sm rounded-2xl shadow-2xl border-2 border-lime-200/50">
+        <Carousel
+          className="w-full"
+          plugins={[
+            Autoplay({
+              delay: 4000,
+            }),
+          ]}
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+        >
+          <CarouselContent>
+            {bannerImages.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-xl shadow-xl ring-2 ring-lime-300/30">
+                  <Image
+                    src={image}
+                    alt={`Banner ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4 bg-white/90 hover:bg-white text-forest-800 backdrop-blur-sm border-2 border-lime-300 h-12 w-12 shadow-lg hover:shadow-xl hover:scale-110 transition-all" />
+          <CarouselNext className="right-4 bg-white/90 hover:bg-white text-forest-800 backdrop-blur-sm border-2 border-lime-300 h-12 w-12 shadow-lg hover:shadow-xl hover:scale-110 transition-all" />
+        </Carousel>
+      </div>
     </div>
   );
 }
