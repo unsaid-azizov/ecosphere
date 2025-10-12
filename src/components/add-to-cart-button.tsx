@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { ShoppingCart, Check, LogIn } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ShoppingCart, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/cart-context'
 import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LoginDialog } from '@/components/auth/login-dialog'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Product } from '@/types/product'
+import { addToGuestCart, getGuestCart } from '@/lib/guest-cart'
+import { toast } from 'sonner'
 
 interface AddToCartButtonProps {
   product: Product
@@ -30,30 +30,44 @@ export function AddToCartButton({
   const { data: session } = useSession()
   const { addToCart, isInCart, getItemQuantity } = useCart()
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  const [showLoginDialog, setShowLoginDialog] = useState(false)
+  const [guestCartQuantity, setGuestCartQuantity] = useState(0)
+  const [forceUpdate, setForceUpdate] = useState(0)
 
-  const inCart = isInCart(product.id)
-  const cartQuantity = getItemQuantity(product.id)
+  // Check guest cart for non-logged users
+  useEffect(() => {
+    if (!session?.user) {
+      const guestCart = getGuestCart()
+      const item = guestCart.find(item => item.productId === product.id)
+      setGuestCartQuantity(item?.quantity || 0)
+    }
+  }, [product.id, session, forceUpdate])
+
+  const inCart = session?.user ? isInCart(product.id) : guestCartQuantity > 0
+  const cartQuantity = session?.user ? getItemQuantity(product.id) : guestCartQuantity
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
 
-    if (!session?.user) {
-      setShowLoginDialog(true)
-      return
-    }
-
     if (!isAddingToCart) {
       setIsAddingToCart(true)
-      await addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        images: product.images,
-        article: product.article,
-        category: product.category
-      }, quantity)
+
+      if (session?.user) {
+        // Logged in user - use API
+        await addToCart({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          images: product.images,
+          article: product.article,
+          category: product.category
+        }, quantity)
+      } else {
+        // Guest user - use localStorage
+        addToGuestCart(product.id, quantity)
+        toast.success('Добавлено в корзину')
+        setForceUpdate(prev => prev + 1)
+      }
 
       setTimeout(() => {
         setIsAddingToCart(false)
@@ -86,30 +100,6 @@ export function AddToCartButton({
       {inCart ? `В корзине (${cartQuantity})` : 'В корзину'}
     </Button>
   )
-
-  if (!session?.user && showLoginDialog) {
-    return (
-      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <DialogTrigger asChild>
-          {cartButton}
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-emerald-600">
-              <LogIn className="w-5 h-5" />
-              Вход в аккаунт
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
-            <p className="text-center text-gray-600">
-              Для добавления товаров в корзину необходимо войти в аккаунт
-            </p>
-            <LoginDialog />
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
 
   return cartButton
 }

@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { getGuestCart, updateGuestCartItem, removeFromGuestCart, GuestCartItem } from '@/lib/guest-cart';
 import { toast } from 'sonner';
+import { CheckoutOptionsModal } from '@/components/checkout-options-modal';
+import { useSession } from 'next-auth/react';
 
 interface Product {
   id: string;
@@ -20,9 +22,11 @@ interface Product {
 
 export default function GuestCartPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [cart, setCart] = useState<GuestCartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   useEffect(() => {
     loadCart();
@@ -195,7 +199,15 @@ export default function GuestCartPage() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={() => router.push('/checkout/guest')}
+                  onClick={() => {
+                    if (session?.user) {
+                      // If logged in, go to regular checkout
+                      router.push('/cart');
+                    } else {
+                      // If guest, show options modal
+                      setShowCheckoutModal(true);
+                    }
+                  }}
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Оформить заказ
@@ -209,6 +221,12 @@ export default function GuestCartPage() {
           </div>
         </div>
       </div>
+
+      {/* Checkout Options Modal */}
+      <CheckoutOptionsModal
+        open={showCheckoutModal}
+        onOpenChange={setShowCheckoutModal}
+      />
     </div>
   );
 }
