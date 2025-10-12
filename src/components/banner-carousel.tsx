@@ -46,7 +46,7 @@ export function BannerCarousel() {
   }
 
   return (
-    <div className="w-full mb-8">
+    <div className="w-full mb-8 hidden md:block">
       <Carousel
         className="w-full"
         plugins={[
@@ -74,8 +74,8 @@ export function BannerCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden md:flex left-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
-        <CarouselNext className="hidden md:flex right-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
+        <CarouselPrevious className="left-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
+        <CarouselNext className="right-4 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-0 h-12 w-12 opacity-60 hover:opacity-80" />
       </Carousel>
     </div>
   );
