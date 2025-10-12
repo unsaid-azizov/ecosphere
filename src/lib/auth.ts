@@ -158,6 +158,11 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // Guest users cannot login (they don't have passwords)
+        if (user.isGuest || !user.password) {
+          return null
+        }
+
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
