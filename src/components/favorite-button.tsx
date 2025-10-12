@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useFavorites } from '@/contexts/favorites-context'
 import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LoginDialog } from '@/components/auth/login-dialog'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { LogIn } from 'lucide-react'
+import { addToGuestFavorites, removeFromGuestFavorites, isInGuestFavorites } from '@/lib/guest-cart'
+import { toast } from 'sonner'
 
 interface FavoriteButtonProps {
   productId: string
@@ -20,25 +19,42 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
   const { data: session } = useSession()
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites()
   const [isLoading, setIsLoading] = useState(false)
-  const [showLoginDialog, setShowLoginDialog] = useState(false)
+  const [isInGuestFavorites, setIsInGuestFavorites] = useState(false)
 
-  const isInFavorites = isFavorite(productId)
+  // Check guest favorites on mount and when productId changes
+  useEffect(() => {
+    if (!session?.user) {
+      setIsInGuestFavorites(isInGuestFavorites(productId))
+    }
+  }, [productId, session])
+
+  const isInFavorites = session?.user ? isFavorite(productId) : isInGuestFavorites
 
   const handleToggleFavorite = async () => {
-    if (!session?.user) {
-      setShowLoginDialog(true)
-      return
-    }
-
     setIsLoading(true)
     try {
-      if (isInFavorites) {
-        await removeFromFavorites(productId)
+      if (session?.user) {
+        // Logged in user - use API
+        if (isInFavorites) {
+          await removeFromFavorites(productId)
+        } else {
+          await addToFavorites(productId)
+        }
       } else {
-        await addToFavorites(productId)
+        // Guest user - use localStorage
+        if (isInFavorites) {
+          removeFromGuestFavorites(productId)
+          setIsInGuestFavorites(false)
+          toast.success('Удалено из избранного')
+        } else {
+          addToGuestFavorites(productId)
+          setIsInGuestFavorites(true)
+          toast.success('Добавлено в избранное')
+        }
       }
     } catch (error) {
       console.error('Ошибка изменения избранного:', error)
+      toast.error('Ошибка при изменении избранного')
     } finally {
       setIsLoading(false)
     }
@@ -89,30 +105,6 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
       )}
     </Button>
   )
-
-  if (!session?.user && showLoginDialog) {
-    return (
-      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <DialogTrigger asChild>
-          {favoriteButton}
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-emerald-600">
-              <LogIn className="w-5 h-5" />
-              Вход в аккаунт
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
-            <p className="text-center text-gray-600">
-              Для добавления в избранное необходимо войти в аккаунт
-            </p>
-            <LoginDialog />
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
 
   return favoriteButton
 }
