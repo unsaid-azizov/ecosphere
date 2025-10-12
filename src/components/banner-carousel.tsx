@@ -1,40 +1,50 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  type CarouselApi,
 } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 
-const banners = [
-  {
-    id: 1,
-    image: '/banner.png',
-    title: '-50% скидки на бумажную продукцию',
-    description: 'Специальное предложение на все виды бумажной продукции'
-  },
-  {
-    id: 2,
-    image: '/banner.png',
-    title: 'Эко товары для отелей',
-    description: 'Широкий выбор экологичных решений для гостиничного бизнеса'
-  },
-  {
-    id: 3,
-    image: '/banner.png', 
-    title: 'Быстрая доставка по всей России',
-    description: 'Доставляем товары в кратчайшие сроки'
-  }
-];
-
 export function BannerCarousel() {
+  const [bannerImages, setBannerImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadBanners() {
+      try {
+        const response = await fetch('/api/banners');
+        if (response.ok) {
+          const images = await response.json();
+          // Fallback to default banner if no images found
+          setBannerImages(images.length > 0 ? images : ['/banner.png']);
+        } else {
+          setBannerImages(['/banner.png']);
+        }
+      } catch (error) {
+        console.error('Failed to load banners:', error);
+        setBannerImages(['/banner.png']);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadBanners();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full mb-8">
+        <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg bg-gray-200 animate-pulse" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full mb-8">
       <Carousel
@@ -50,12 +60,12 @@ export function BannerCarousel() {
         }}
       >
         <CarouselContent>
-          {banners.map((banner, index) => (
-            <CarouselItem key={banner.id}>
+          {bannerImages.map((image, index) => (
+            <CarouselItem key={index}>
               <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg">
                 <Image
-                  src={banner.image}
-                  alt={banner.title}
+                  src={image}
+                  alt={`Banner ${index + 1}`}
                   fill
                   className="object-cover"
                   priority={index === 0}
