@@ -19,16 +19,16 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
   const { data: session } = useSession()
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites()
   const [isLoading, setIsLoading] = useState(false)
-  const [isInGuestFavorites, setIsInGuestFavorites] = useState(false)
+  const [guestFavorite, setGuestFavorite] = useState(false)
 
   // Check guest favorites on mount and when productId changes
   useEffect(() => {
     if (!session?.user) {
-      setIsInGuestFavorites(isInGuestFavorites(productId))
+      setGuestFavorite(isInGuestFavorites(productId))
     }
   }, [productId, session])
 
-  const isInFavorites = session?.user ? isFavorite(productId) : isInGuestFavorites
+  const isInFavorites = session?.user ? isFavorite(productId) : guestFavorite
 
   const handleToggleFavorite = async () => {
     setIsLoading(true)
@@ -44,11 +44,11 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
         // Guest user - use localStorage
         if (isInFavorites) {
           removeFromGuestFavorites(productId)
-          setIsInGuestFavorites(false)
+          setGuestFavorite(false)
           toast.success('Удалено из избранного')
         } else {
           addToGuestFavorites(productId)
-          setIsInGuestFavorites(true)
+          setGuestFavorite(true)
           toast.success('Добавлено в избранное')
         }
       }
