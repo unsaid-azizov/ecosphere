@@ -15,13 +15,14 @@ export async function GET() {
     // Read all files from banners directory
     const files = fs.readdirSync(bannersDir);
 
-    // Filter only image files
+    // Filter only image files and sort alphabetically
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
     const bannerImages = files
       .filter(file => {
         const ext = path.extname(file).toLowerCase();
         return imageExtensions.includes(ext);
       })
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
       .map(file => `/banners/${file}`);
 
     return NextResponse.json(bannerImages);

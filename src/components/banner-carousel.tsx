@@ -21,14 +21,10 @@ export function BannerCarousel() {
         const response = await fetch('/api/banners');
         if (response.ok) {
           const images = await response.json();
-          // Fallback to default banner if no images found
-          setBannerImages(images.length > 0 ? images : ['/banner.png']);
-        } else {
-          setBannerImages(['/banner.png']);
+          setBannerImages(images);
         }
       } catch (error) {
         console.error('Failed to load banners:', error);
-        setBannerImages(['/banner.png']);
       } finally {
         setLoading(false);
       }
@@ -43,6 +39,10 @@ export function BannerCarousel() {
         <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-lg shadow-lg bg-gray-200 animate-pulse" />
       </div>
     );
+  }
+
+  if (bannerImages.length === 0) {
+    return null;
   }
 
   return (
