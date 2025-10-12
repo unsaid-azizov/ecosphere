@@ -20,13 +20,14 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites()
   const [isLoading, setIsLoading] = useState(false)
   const [guestFavorite, setGuestFavorite] = useState(false)
+  const [forceUpdate, setForceUpdate] = useState(0)
 
-  // Check guest favorites on mount and when productId changes
+  // Check guest favorites on mount, when productId changes, or when forceUpdate changes
   useEffect(() => {
     if (!session?.user) {
       setGuestFavorite(isInGuestFavorites(productId))
     }
-  }, [productId, session])
+  }, [productId, session, forceUpdate])
 
   const isInFavorites = session?.user ? isFavorite(productId) : guestFavorite
 
@@ -51,6 +52,8 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
           setGuestFavorite(true)
           toast.success('Добавлено в избранное')
         }
+        // Force re-check from localStorage
+        setForceUpdate(prev => prev + 1)
       }
     } catch (error) {
       console.error('Ошибка изменения избранного:', error)

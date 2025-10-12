@@ -9,6 +9,7 @@ import { Product } from '@/types/product';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { getGuestFavorites } from '@/lib/guest-cart';
 
 export function FavoritesClient() {
   const { data: session, status } = useSession();
@@ -23,28 +24,37 @@ export function FavoritesClient() {
 
   useEffect(() => {
     async function fetchFavoriteProducts() {
-      if (favorites.length === 0) {
-        setFavoriteProducts([]);
-        return;
-      }
-
       try {
         setProductsLoading(true);
         setError(null);
-        
+
+        // Get favorites - from localStorage for guests, from context for logged in users
+        let favoriteIds: string[];
+        if (session?.user) {
+          favoriteIds = favorites;
+        } else {
+          favoriteIds = getGuestFavorites();
+        }
+
+        if (favoriteIds.length === 0) {
+          setFavoriteProducts([]);
+          setProductsLoading(false);
+          return;
+        }
+
         // Получаем все товары из API
         const response = await fetch('/api/products');
         if (!response.ok) {
           throw new Error('Не удалось загрузить товары');
         }
-        
+
         const allProducts = await response.json();
-        
+
         // Фильтруем только избранные товары
-        const filteredProducts = allProducts.filter((product: Product) => 
-          favorites.includes(product.id)
+        const filteredProducts = allProducts.filter((product: Product) =>
+          favoriteIds.includes(product.id)
         );
-        
+
         setFavoriteProducts(filteredProducts);
       } catch (err) {
         console.error('Error fetching favorite products:', err);
@@ -55,39 +65,7 @@ export function FavoritesClient() {
     }
 
     fetchFavoriteProducts();
-  }, [favorites]);
-
-  if (status === 'loading' || loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lime-400"></div>
-          <p className="mt-4 text-gray-600">Загрузка избранных товаров...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="text-center py-16">
-        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Heart className="w-12 h-12 text-gray-400" />
-        </div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-          Требуется авторизация
-        </h2>
-        <p className="text-gray-600 mb-8">
-          Войдите в аккаунт, чтобы увидеть ваши избранные товары
-        </p>
-        <Link href="/auth/signin">
-          <Button className="bg-lime-400 hover:bg-lime-500 text-forest-800">
-            Войти в аккаунт
-          </Button>
-        </Link>
-      </div>
-    );
-  }
+  }, [favorites, session]);
 
   if (productsLoading) {
     return (
