@@ -19,20 +19,52 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCart } from '@/contexts/cart-context';
 import { useFavorites } from '@/contexts/favorites-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { getGuestCart, getGuestFavorites } from '@/lib/guest-cart';
 
 export function Navbar() {
   const { cart } = useCart();
   const { favorites } = useFavorites();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session } = useSession();
+  const [guestCartCount, setGuestCartCount] = useState(0);
+  const [guestFavoritesCount, setGuestFavoritesCount] = useState(0);
+
+  // Update guest cart and favorites count
+  useEffect(() => {
+    if (!session?.user) {
+      const updateGuestCounts = () => {
+        const guestCart = getGuestCart();
+        const guestFavorites = getGuestFavorites();
+        setGuestCartCount(guestCart.reduce((sum, item) => sum + item.quantity, 0));
+        setGuestFavoritesCount(guestFavorites.length);
+      };
+
+      updateGuestCounts();
+
+      // Listen for storage events to update counts when cart/favorites change
+      window.addEventListener('storage', updateGuestCounts);
+      // Also listen for custom event for same-tab updates
+      window.addEventListener('guestCartUpdated', updateGuestCounts);
+
+      return () => {
+        window.removeEventListener('storage', updateGuestCounts);
+        window.removeEventListener('guestCartUpdated', updateGuestCounts);
+      };
+    }
+  }, [session]);
 
   const navigation = [
     { name: 'Каталог', href: '/catalog' },
     { name: 'О компании', href: '/about' },
     { name: 'Блог', href: '/blog' },
   ];
+
+  // Calculate cart and favorites count based on user type
+  const cartCount = session?.user ? cart.totalItems : guestCartCount;
+  const favoritesCount = session?.user ? favorites.length : guestFavoritesCount;
+  const cartHref = session?.user ? '/cart' : '/cart/guest';
 
   return (
     <nav className="relative bg-forest-800 border-b border-forest-700 sticky top-0 z-50">
@@ -199,11 +231,11 @@ export function Navbar() {
             <Link href="/favorites">
               <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300 hover:bg-forest-700">
                 <Heart className="w-4 h-4" />
-                {favorites.length > 0 && (
+                {favoritesCount > 0 && (
                   <Badge
                     className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-lime-400 text-white border-0 shadow-lg"
                   >
-                    {favorites.length > 99 ? '99+' : favorites.length}
+                    {favoritesCount > 99 ? '99+' : favoritesCount}
                   </Badge>
                 )}
               </Button>
@@ -217,14 +249,14 @@ export function Navbar() {
             </Link>
 
             {/* Cart */}
-            <Link href="/cart">
+            <Link href={cartHref}>
               <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200 text-lime-100 hover:text-lime-300 hover:bg-forest-700">
                 <ShoppingCart className="w-4 h-4" />
-                {cart.totalItems > 0 && (
+                {cartCount > 0 && (
                   <Badge
                     className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1 text-xs font-bold bg-forest-600 text-white border-0 shadow-lg animate-pulse"
                   >
-                    {cart.totalItems > 99 ? '99+' : cart.totalItems}
+                    {cartCount > 99 ? '99+' : cartCount}
                   </Badge>
                 )}
               </Button>

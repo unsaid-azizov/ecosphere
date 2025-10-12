@@ -7,6 +7,13 @@ export interface GuestCartItem {
 const GUEST_CART_KEY = 'ecosphere_guest_cart';
 const GUEST_FAVORITES_KEY = 'ecosphere_guest_favorites';
 
+// Helper to dispatch custom event for same-tab updates
+function dispatchGuestCartUpdate() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('guestCartUpdated'));
+  }
+}
+
 // Cart functions
 export function getGuestCart(): GuestCartItem[] {
   if (typeof window === 'undefined') return [];
@@ -22,6 +29,7 @@ export function saveGuestCart(cart: GuestCartItem[]): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+    dispatchGuestCartUpdate();
   } catch (error) {
     console.error('Failed to save guest cart:', error);
   }
@@ -62,6 +70,7 @@ export function removeFromGuestCart(productId: string): void {
 export function clearGuestCart(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(GUEST_CART_KEY);
+  dispatchGuestCartUpdate();
 }
 
 // Favorites functions
@@ -79,6 +88,7 @@ export function saveGuestFavorites(favorites: string[]): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(GUEST_FAVORITES_KEY, JSON.stringify(favorites));
+    dispatchGuestCartUpdate();
   } catch (error) {
     console.error('Failed to save guest favorites:', error);
   }
@@ -104,4 +114,5 @@ export function isInGuestFavorites(productId: string): boolean {
 export function clearGuestFavorites(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(GUEST_FAVORITES_KEY);
+  dispatchGuestCartUpdate();
 }
