@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { ImageCleanup } from '@/lib/image-cleanup'
 
 interface RouteParams {
   params: {
@@ -83,6 +84,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // Clean up old images that are no longer used
+    if (existingProduct.images && images) {
+      await ImageCleanup.cleanupOldImages(existingProduct.images, images)
+    }
+
     // Update product
     const updatedProduct = await prisma.product.update({
       where: { id: params.id },
@@ -154,6 +160,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         { error: 'Нельзя удалить товар, который есть в заказах. Можно отключить его доступность.' },
         { status: 409 }
       )
+    }
+
+    // Delete product images first
+    if (existingProduct.images && existingProduct.images.length > 0) {
+      await ImageCleanup.deleteProductImages(existingProduct.images)
     }
 
     // Delete product

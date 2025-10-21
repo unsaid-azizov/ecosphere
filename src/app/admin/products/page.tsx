@@ -5,13 +5,14 @@ import { AdminLayout } from '@/components/admin-layout'
 import { ProductsTable } from './products-table'
 import { prisma } from '@/lib/prisma'
 
-async function getProducts() {
+async function getProducts(limit: number = 50, offset: number = 0) {
   try {
     const products = await prisma.product.findMany({
       orderBy: {
         createdAt: 'desc'
       },
-      take: 100 // Ограничиваем для производительности
+      take: limit,
+      skip: offset
     })
 
     // Convert null to undefined and dates to strings to match interface
@@ -24,6 +25,15 @@ async function getProducts() {
   } catch (error) {
     console.error('Error fetching products:', error)
     return []
+  }
+}
+
+async function getTotalProductsCount() {
+  try {
+    return await prisma.product.count()
+  } catch (error) {
+    console.error('Error fetching products count:', error)
+    return 0
   }
 }
 
@@ -66,9 +76,10 @@ export default async function AdminProductsPage() {
     redirect('/')
   }
 
-  const [products, stats] = await Promise.all([
-    getProducts(),
-    getProductStats()
+  const [products, stats, totalCount] = await Promise.all([
+    getProducts(50, 0), // Загружаем первые 50 продуктов
+    getProductStats(),
+    getTotalProductsCount()
   ])
 
   return (
@@ -77,11 +88,15 @@ export default async function AdminProductsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Управление товарами</h1>
           <p className="text-gray-600 mt-2">
-            Просмотр и управление каталогом товаров
+            Просмотр и управление каталогом товаров ({totalCount} товаров)
           </p>
         </div>
 
-        <ProductsTable products={products} stats={stats} />
+        <ProductsTable 
+          initialProducts={products} 
+          stats={stats} 
+          totalCount={totalCount}
+        />
       </div>
     </AdminLayout>
   )

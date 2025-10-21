@@ -32,6 +32,7 @@ import {
 import { Search, Package, AlertTriangle, CheckCircle, Edit, Eye, Plus, Save, X, Trash2, Download, Upload } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { useRef } from 'react'
+import { ImageUpload } from '@/components/image-upload'
 
 interface Product {
   id: string
@@ -54,11 +55,13 @@ interface ProductStats {
 }
 
 interface ProductsTableProps {
-  products: Product[]
+  initialProducts: Product[]
   stats: ProductStats
+  totalCount: number
 }
 
-export function ProductsTable({ products, stats }: ProductsTableProps) {
+export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTableProps) {
+  const [products, setProducts] = useState<Product[]>(initialProducts)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
   const [availabilityFilter, setAvailabilityFilter] = useState<string>('ALL')
@@ -73,10 +76,36 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
   const [isImporting, setIsImporting] = useState(false)
   const [errorDialogOpen, setErrorDialogOpen] = useState(false)
   const [errorMessages, setErrorMessages] = useState<string[]>([])
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMoreProducts, setHasMoreProducts] = useState(products.length < totalCount)
+  const [isCleaningUp, setIsCleaningUp] = useState(false)
+  const [cleanupResult, setCleanupResult] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Получение уникальных категорий
   const categories = Array.from(new Set(products.map(p => p.category)))
+
+  // Функция для загрузки дополнительных товаров
+  const loadMoreProducts = async () => {
+    if (loadingMore || !hasMoreProducts) return
+
+    setLoadingMore(true)
+    try {
+      const response = await fetch(`/api/admin/products?limit=50&offset=${products.length}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setProducts(prev => [...prev, ...data.products])
+        setHasMoreProducts(data.hasMore)
+      } else {
+        console.error('Ошибка загрузки товаров:', data.error)
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке товаров:', error)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   // Фильтрация товаров
   const filteredProducts = products.filter(product => {
@@ -104,7 +133,10 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
       })
       
       if (response.ok) {
-        window.location.reload()
+        // Обновляем локальное состояние вместо перезагрузки страницы
+        setProducts(prev => prev.map(p => 
+          p.id === productId ? { ...p, isAvailable } : p
+        ))
       } else {
         alert('Ошибка при изменении доступности')
       }
@@ -174,6 +206,29 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
     }
   }
 
+  const handleCleanupImages = async () => {
+    setIsCleaningUp(true)
+    try {
+      const response = await fetch('/api/admin/cleanup/images', {
+        method: 'POST',
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        setCleanupResult(result)
+        alert(`Очистка завершена!\n\nУдалено файлов: ${result.deleted}\nРазмер папки: ${result.uploadsInfo.sizeFormatted}\nФайлов в папке: ${result.uploadsInfo.files}`)
+      } else {
+        alert(`Ошибка очистки: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error cleaning up images:', error)
+      alert('Ошибка при очистке изображений')
+    } finally {
+      setIsCleaningUp(false)
+    }
+  }
+
   const openProductDetails = (product: Product) => {
     setSelectedProduct(product)
     setIsProductDialogOpen(true)
@@ -218,7 +273,15 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
       })
       
       if (response.ok) {
-        window.location.reload()
+        // Перезагружаем все товары после создания/обновления
+        const refreshResponse = await fetch(`/api/admin/products?limit=${products.length + 10}&offset=0`)
+        const refreshData = await refreshResponse.json()
+        if (refreshResponse.ok) {
+          setProducts(refreshData.products)
+          setHasMoreProducts(refreshData.hasMore)
+        } else {
+          window.location.reload()
+        }
       } else {
         const result = await response.json()
         alert(result.error || 'Ошибка при сохранении товара')
@@ -252,7 +315,9 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
       })
       
       if (response.ok) {
-        window.location.reload()
+        // Удаляем товар из локального состояния
+        setProducts(prev => prev.filter(p => p.id !== productToDelete.id))
+        setHasMoreProducts(prev => prev || products.length > 1)
       } else {
         const errorData = await response.json()
         alert(errorData.error || 'Ошибка при удалении товара')
@@ -337,6 +402,16 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
               {isImporting ? 'Импортирование...' : 'Импорт каталога (Excel)'}
             </Button>
 
+            <Button
+              variant="outline"
+              onClick={handleCleanupImages}
+              disabled={isCleaningUp}
+              className="flex items-center gap-2 text-orange-600 hover:text-orange-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              {isCleaningUp ? 'Очистка...' : 'Очистить неиспользуемые изображения'}
+            </Button>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -406,7 +481,14 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Товары ({filteredProducts.length})</CardTitle>
+            <CardTitle>
+              Товары ({totalCount})
+              {filteredProducts.length !== products.length && (
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  (показано: {filteredProducts.length})
+                </span>
+              )}
+            </CardTitle>
             <Button 
               onClick={openCreateProduct}
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
@@ -535,6 +617,35 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
                 <p className="text-muted-foreground">Товары не найдены</p>
               </div>
             )}
+          </div>
+          
+          {/* Кнопка загрузки дополнительных товаров */}
+          {hasMoreProducts && (
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={loadMoreProducts}
+                disabled={loadingMore}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                    Загрузка...
+                  </>
+                ) : (
+                  <>
+                    <Package className="h-4 w-4" />
+                    Показать больше товаров ({totalCount - products.length} осталось)
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+          
+          {/* Информация о загруженных товарах */}
+          <div className="text-center mt-4 text-sm text-gray-500">
+            Показано {products.length} из {totalCount} товаров
           </div>
         </CardContent>
       </Card>
@@ -737,15 +848,12 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
               <div>
                 <Label>Изображения</Label>
                 {isEditMode ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      placeholder="Вставьте URL изображений, каждый с новой строки"
-                      value={editingProduct?.images?.join('\n') || ''}
-                      onChange={(e) => updateEditingProduct('images', e.target.value.split('\n').filter(url => url.trim()))}
-                      rows={3}
-                    />
-                    <p className="text-sm text-gray-500">Введите URL изображений, каждый с новой строки</p>
-                  </div>
+                  <ImageUpload
+                    images={editingProduct?.images || []}
+                    onImagesChange={(images) => updateEditingProduct('images', images)}
+                    maxImages={10}
+                    className="mt-2"
+                  />
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                     {selectedProduct?.images && selectedProduct.images.length > 0 ? (
@@ -942,15 +1050,12 @@ export function ProductsTable({ products, stats }: ProductsTableProps) {
 
               <div>
                 <Label>Изображения</Label>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Вставьте URL изображений, каждый с новой строки"
-                    value={editingProduct.images?.join('\n') || ''}
-                    onChange={(e) => updateEditingProduct('images', e.target.value.split('\n').filter(url => url.trim()))}
-                    rows={3}
-                  />
-                  <p className="text-sm text-gray-500">Введите URL изображений, каждый с новой строки</p>
-                </div>
+                <ImageUpload
+                  images={editingProduct.images || []}
+                  onImagesChange={(images) => updateEditingProduct('images', images)}
+                  maxImages={10}
+                  className="mt-2"
+                />
               </div>
             </div>
           )}
