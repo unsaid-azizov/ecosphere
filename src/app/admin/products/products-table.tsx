@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -265,30 +266,48 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
     try {
       const url = isNew ? '/api/admin/products' : `/api/admin/products/${editingProduct.id}`
       const method = isNew ? 'POST' : 'PUT'
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingProduct)
       })
-      
+
       if (response.ok) {
+        const savedProduct = await response.json()
+
         // Перезагружаем все товары после создания/обновления
         const refreshResponse = await fetch(`/api/admin/products?limit=${products.length + 10}&offset=0`)
         const refreshData = await refreshResponse.json()
         if (refreshResponse.ok) {
           setProducts(refreshData.products)
           setHasMoreProducts(refreshData.hasMore)
-        } else {
-          window.location.reload()
         }
+
+        // Закрываем модалки
+        setIsProductDialogOpen(false)
+        setIsCreateDialogOpen(false)
+        setIsEditMode(false)
+        setEditingProduct(null)
+
+        // Показываем успешное уведомление
+        toast.success(
+          isNew ? 'Товар успешно создан!' : 'Товар успешно обновлен!',
+          {
+            description: `${savedProduct.product?.name || editingProduct.name}`,
+          }
+        )
       } else {
         const result = await response.json()
-        alert(result.error || 'Ошибка при сохранении товара')
+        toast.error('Ошибка при сохранении', {
+          description: result.error || 'Не удалось сохранить товар'
+        })
       }
     } catch (error) {
       console.error('Error saving product:', error)
-      alert('Ошибка при сохранении товара')
+      toast.error('Ошибка при сохранении', {
+        description: 'Произошла ошибка при сохранении товара'
+      })
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { revalidatePath } from 'next/cache'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ImageCleanup } from '@/lib/image-cleanup'
@@ -105,7 +106,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     })
 
-    return NextResponse.json(updatedProduct)
+    // Очищаем кэш для страницы товара и каталога
+    revalidatePath('/catalog')
+    revalidatePath(`/product/${updatedProduct.id}`)
+
+    return NextResponse.json({ product: updatedProduct })
   } catch (error) {
     console.error('Error updating product:', error)
     

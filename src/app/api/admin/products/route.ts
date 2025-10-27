@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { revalidatePath } from 'next/cache'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -77,7 +78,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(newProduct)
+    // Очищаем кэш для страницы товара и каталога
+    revalidatePath('/catalog')
+    revalidatePath(`/product/${newProduct.id}`)
+
+    return NextResponse.json({ product: newProduct })
   } catch (error) {
     console.error('Error creating product:', error)
     
