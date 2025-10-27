@@ -38,10 +38,12 @@ async function getProduct(article: string): Promise<Product | null> {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    const product = await getProduct(params.article);
+    // Декодируем артикул из URL (для кириллицы и спецсимволов)
+    const decodedArticle = decodeURIComponent(params.article);
+    const product = await getProduct(decodedArticle);
 
     if (!product) {
-      console.log(`Product not found: ${params.article}`);
+      console.log(`Product not found: ${decodedArticle} (original: ${params.article})`);
       // Instead of showing 404, redirect to catalog
       redirect('/catalog');
     }
@@ -55,7 +57,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
     );
   } catch (error) {
-    console.error(`Error loading product ${params.article}:`, error);
+    console.error(`Error loading product ${decodeURIComponent(params.article)}:`, error);
     notFound();
   }
 }
