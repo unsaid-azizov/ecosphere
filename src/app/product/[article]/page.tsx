@@ -6,14 +6,14 @@ import { Product } from '@/types/product';
 
 interface ProductPageProps {
   params: {
-    id: string;
+    article: string;
   };
 }
 
-async function getProduct(id: string): Promise<Product | null> {
+async function getProduct(article: string): Promise<Product | null> {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id }
+    const product = await prisma.product.findFirst({
+      where: { article }
     });
 
     if (!product) return null;
@@ -38,10 +38,10 @@ async function getProduct(id: string): Promise<Product | null> {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    const product = await getProduct(params.id);
+    const product = await getProduct(params.article);
 
     if (!product) {
-      console.log(`Product not found: ${params.id}`);
+      console.log(`Product not found: ${params.article}`);
       // Instead of showing 404, redirect to catalog
       redirect('/catalog');
     }
@@ -55,7 +55,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
     );
   } catch (error) {
-    console.error(`Error loading product ${params.id}:`, error);
+    console.error(`Error loading product ${params.article}:`, error);
     notFound();
   }
 }

@@ -108,7 +108,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Очищаем кэш для страницы товара и каталога
     revalidatePath('/catalog')
-    revalidatePath(`/product/${updatedProduct.id}`)
+    revalidatePath(`/product/${updatedProduct.article}`)
 
     return NextResponse.json({ product: updatedProduct })
   } catch (error) {

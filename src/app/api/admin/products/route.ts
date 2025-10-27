@@ -46,13 +46,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if article already exists (check both id and article for compatibility)
+    // Check if article already exists
     const existingProduct = await prisma.product.findFirst({
-      where: { 
-        OR: [
-          { id: article.trim() },
-          { article: article.trim() }
-        ]
+      where: {
+        article: article.trim()
       }
     })
 
@@ -63,10 +60,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new product (using article as id for consistency)
+    // Create new product using article as id for URL consistency
     const newProduct = await prisma.product.create({
       data: {
-        id: article.trim(), // Use article as id
+        id: article.trim(), // Using article as id so URLs work with /product/[article]
         article: article.trim(),
         name: name.trim(),
         description: description?.trim() || '',
@@ -80,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Очищаем кэш для страницы товара и каталога
     revalidatePath('/catalog')
-    revalidatePath(`/product/${newProduct.id}`)
+    revalidatePath(`/product/${newProduct.article}`)
 
     return NextResponse.json({ product: newProduct })
   } catch (error) {

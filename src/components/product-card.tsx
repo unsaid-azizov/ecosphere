@@ -41,15 +41,15 @@ export function ProductCard({
     // Не навигируем если клик был на интерактивном элементе
     const target = e.target as HTMLElement;
     if (
-      target.closest('button') || 
-      target.closest('a') || 
+      target.closest('button') ||
+      target.closest('a') ||
       target.closest('[role="button"]') ||
       target.closest('.image-nav-button')
     ) {
       return;
     }
-    
-    router.push(`/product/${product.id}`);
+
+    router.push(`/product/${product.article}`);
   };
 
   // Обработчики переключения изображений
