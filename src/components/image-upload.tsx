@@ -47,15 +47,15 @@ export function ImageUpload({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    
+
     const files = Array.from(e.dataTransfer.files)
     handleFiles(files)
-  }, [])
+  }, [images, maxImages])
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     handleFiles(files)
-  }, [])
+  }, [images, maxImages])
 
   const handleFiles = async (files: File[]) => {
     if (images.length + files.length > maxImages) {

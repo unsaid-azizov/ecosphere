@@ -12,6 +12,11 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 // Разрешенные типы файлов
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
+// Настройка для Next.js App Router - увеличение лимита body до 10MB
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const maxDuration = 30 // максимальное время выполнения 30 секунд
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Image upload request received')
