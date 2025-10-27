@@ -295,9 +295,10 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
   }
 
   const updateEditingProduct = (field: string, value: any) => {
-    if (editingProduct) {
-      setEditingProduct({ ...editingProduct, [field]: value })
-    }
+    setEditingProduct(prev => {
+      if (!prev) return prev
+      return { ...prev, [field]: value }
+    })
   }
 
   const openDeleteProduct = (product: Product) => {
