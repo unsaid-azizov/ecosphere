@@ -64,7 +64,10 @@ export function ImageUpload({
     }
 
     setUploading(true)
-    
+
+    // Используем локальный массив для накопления новых URL
+    const newImageUrls: string[] = []
+
     for (const file of files) {
       try {
         const formData = new FormData()
@@ -79,7 +82,7 @@ export function ImageUpload({
         console.log('Upload response:', response.status, result)
 
         if (response.ok) {
-          onImagesChange([...images, result.imageUrl])
+          newImageUrls.push(result.imageUrl)
         } else {
           console.error('Upload failed:', result)
           alert(`Ошибка загрузки ${file.name}: ${result.error}`)
@@ -90,8 +93,13 @@ export function ImageUpload({
       }
     }
 
+    // Обновляем все изображения одним вызовом
+    if (newImageUrls.length > 0) {
+      onImagesChange([...images, ...newImageUrls])
+    }
+
     setUploading(false)
-    
+
     // Очищаем input
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
