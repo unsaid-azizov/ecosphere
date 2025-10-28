@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         name: product.name,
         description: product.description || '',
         price: product.price,
-        category: product.category,
+        categories: product.categories,
         images: product.images || [],
         stockQuantity,
         isAvailable: stockQuantity > 0
