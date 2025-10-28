@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { getGuestFavorites, removeFromGuestFavorites } from '@/lib/guest-cart';
@@ -16,7 +17,7 @@ interface Product {
   article: string;
   images: string[];
   isAvailable: boolean;
-  category: string;
+  categories: string[];
 }
 
 export default function GuestFavoritesPage() {
@@ -117,9 +118,13 @@ export default function GuestFavoritesPage() {
                 <p className="text-sm text-muted-foreground mb-2">
                   Артикул: {product.article}
                 </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {product.category}
-                </p>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {product.categories.map((cat, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {cat}
+                    </Badge>
+                  ))}
+                </div>
                 <p className="text-2xl font-bold mb-4">
                   ₽{product.price.toLocaleString()}
                 </p>

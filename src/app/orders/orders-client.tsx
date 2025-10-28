@@ -18,7 +18,7 @@ interface OrderItem {
   quantity: number
   price: number
   productName: string
-  productCategory: string
+  productCategories: string[]
   productArticle: string
 }
 
