@@ -23,14 +23,14 @@ export default async function CatalogPage() {
   try {
     // Get all products for discount calculation
     const products = await fetchProducts();
-    
+
     if (products.length > 0) {
       // Get discounts for all products
       discounts = await getServerDiscounts(
         products.map((p: any) => ({
           id: p.id,
           price: p.price,
-          category: p.category
+          categories: p.categories
         }))
       );
     }

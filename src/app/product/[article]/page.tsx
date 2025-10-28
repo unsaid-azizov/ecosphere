@@ -24,7 +24,7 @@ async function getProduct(article: string): Promise<Product | null> {
       name: product.name,
       description: product.description || '',
       price: product.price,
-      category: product.category,
+      categories: product.categories,
       images: product.images,
       availability: product.stockQuantity > 0 ? 'В наличии' : 'Нет в наличии',
       stockQuantity: product.stockQuantity,

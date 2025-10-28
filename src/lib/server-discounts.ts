@@ -9,11 +9,11 @@ export interface ServerDiscountResult {
 }
 
 export async function getServerDiscounts(
-  products: Array<{ id: string; price: number; category: string }>
+  products: Array<{ id: string; price: number; categories: string[] }>
 ): Promise<ServerDiscountResult[]> {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user) {
       return []
     }
@@ -30,6 +30,12 @@ export async function getServerDiscounts(
     const now = new Date()
 
     for (const product of products) {
+      // Build category discount conditions - check if discount category is in product's categories
+      const categoryDiscountConditions = product.categories.map(cat => ({
+        discountType: 'CATEGORY' as const,
+        category: cat
+      }))
+
       // Ищем применимые скидки в порядке приоритета
       const applicableDiscounts = await prisma.personalDiscount.findMany({
         where: {
@@ -45,29 +51,26 @@ export async function getServerDiscounts(
                 // Скидка для конкретного пользователя
                 { userId: currentUser.id },
                 // Скидка для типа пользователей
-                { 
+                {
                   userId: null,
-                  userType: currentUser.userType 
+                  userType: currentUser.userType
                 },
                 // Скидка для всех пользователей
-                { 
+                {
                   userId: null,
-                  userType: null 
+                  userType: null
                 }
               ]
             },
             {
               OR: [
                 // Скидка на конкретный товар
-                { 
+                {
                   discountType: 'PRODUCT',
-                  productId: product.id 
+                  productId: product.id
                 },
-                // Скидка на категорию
-                { 
-                  discountType: 'CATEGORY',
-                  category: product.category 
-                },
+                // Скидка на любую из категорий товара
+                ...categoryDiscountConditions,
                 // Скидка на все товары
                 { discountType: 'ALL' }
               ]
