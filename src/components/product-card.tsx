@@ -234,15 +234,22 @@ export function ProductCard({
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-4 min-h-[1.5rem]">
               {discountPercent > 0 && (
-                <DiscountBadge 
+                <DiscountBadge
                   discountPercent={discountPercent}
                   discountName={discountName}
                   className="text-xs"
                 />
               )}
-              <Badge variant="outline" className="text-xs w-fit max-w-full truncate border-forest-300 text-forest-600">
-                {product.category.length > 20 ? `${product.category.substring(0, 20)}...` : product.category}
-              </Badge>
+              {product.categories.slice(0, 2).map((cat, idx) => (
+                <Badge key={idx} variant="outline" className="text-xs w-fit max-w-full truncate border-forest-300 text-forest-600">
+                  {cat.length > 20 ? `${cat.substring(0, 20)}...` : cat}
+                </Badge>
+              ))}
+              {product.categories.length > 2 && (
+                <Badge variant="outline" className="text-xs border-forest-300 text-forest-600">
+                  +{product.categories.length - 2}
+                </Badge>
+              )}
             </div>
 
             {/* Заполнитель для выравнивания кнопки вниз */}

@@ -60,7 +60,7 @@ export function AddToCartButton({
           price: product.price,
           images: product.images,
           article: product.article,
-          category: product.category
+          categories: product.categories
         }, quantity)
       } else {
         // Guest user - use localStorage

@@ -66,9 +66,14 @@ export const CartItem = memo(function CartItem({ item, onUpdateQuantity, onRemov
                 <Badge variant="outline" className="text-xs mb-2">
                   {item.product.article}
                 </Badge>
-                <p className="text-sm text-gray-600">
-                  {item.product.category}
-                </p>
+                <div className="flex flex-wrap gap-1">
+                  {item.product.categories.slice(0, 2).map((cat, idx) => (
+                    <span key={idx} className="text-xs text-gray-600">{cat}{idx < Math.min(item.product.categories.length, 2) - 1 ? ',' : ''}</span>
+                  ))}
+                  {item.product.categories.length > 2 && (
+                    <span className="text-xs text-gray-600">+{item.product.categories.length - 2}</span>
+                  )}
+                </div>
               </div>
               <Button
                 variant="ghost"

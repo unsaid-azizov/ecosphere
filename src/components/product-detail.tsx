@@ -168,9 +168,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <Badge variant="outline" className="mb-4 text-sm border-forest-300 text-forest-700">
-              {product.category.length > 25 ? `${product.category.substring(0, 25)}...` : product.category}
-            </Badge>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {product.categories.map((cat, idx) => (
+                <Badge key={idx} variant="outline" className="text-sm border-forest-300 text-forest-700">
+                  {cat.length > 25 ? `${cat.substring(0, 25)}...` : cat}
+                </Badge>
+              ))}
+            </div>
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 leading-tight">{product.name}</h1>
             <div className="text-3xl lg:text-4xl font-bold text-forest-700 mb-6">
               ₽{product.price.toLocaleString()}
@@ -294,13 +298,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   <span className="font-medium text-gray-900">{product.article}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-lime-200">
-                  <span className="text-forest-600">Категория</span>
-                  <span className="font-medium text-right max-w-[60%] break-words text-gray-900">
-                    {product.category.length > 35 
-                      ? `${product.category.substring(0, 35)}...` 
-                      : product.category
-                    }
-                  </span>
+                  <span className="text-forest-600">Категории</span>
+                  <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                    {product.categories.map((cat, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {cat.length > 20 ? `${cat.substring(0, 20)}...` : cat}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex justify-between py-2">
                   <span className="text-forest-600">Цена</span>
