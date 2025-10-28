@@ -31,7 +31,7 @@ export async function GET() {
       'Название': p.name,
       'Описание': p.description || '',
       'Цена': p.price,
-      'Категории': p.categories.join('; '), // Export multiple categories separated by semicolon
+      'Категории': ((p as any).categories || []).join('; '), // Export multiple categories separated by semicolon
       'Артикул': p.article,
       'Количество': p.stockQuantity,
       'Доступен': p.isAvailable ? 'Да' : 'Нет',
