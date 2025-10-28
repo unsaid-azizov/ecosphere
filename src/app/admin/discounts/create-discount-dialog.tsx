@@ -25,7 +25,7 @@ interface User {
 interface Product {
   id: string
   name: string
-  category: string
+  categories: string[]
   article: string
 }
 
