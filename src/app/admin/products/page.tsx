@@ -19,7 +19,7 @@ async function getProducts(limit: number = 50, offset: number = 0) {
     return products.map(product => ({
       ...product,
       description: product.description === null ? undefined : product.description,
-      categories: product.categories || [], // Ensure categories is always an array
+      categories: (product as any).categories || [], // Ensure categories is always an array (type will update after Prisma regeneration)
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString()
     }))
