@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (category && category !== 'all') {
-      where.category = category
+      where.categories = { has: category }
     }
 
     if (search) {
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       name: product.name,
       description: product.description || '',
       price: product.price,
-      category: product.category,
+      categories: product.categories,
       images: product.images,
       availability: product.stockQuantity > 0 ? 'В наличии' : 'Нет в наличии',
       stockQuantity: product.stockQuantity

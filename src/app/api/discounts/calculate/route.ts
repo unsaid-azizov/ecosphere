@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
     for (const product of products) {
       const { productId, originalPrice } = product
       
-      // Получаем товар для определения категории
+      // Получаем товар для определения категорий
       const productData = await prisma.product.findUnique({
         where: { id: productId },
-        select: { category: true }
+        select: { categories: true }
       })
 
       if (!productData) {
@@ -74,7 +74,13 @@ export async function POST(request: NextRequest) {
 
       // Ищем применимые скидки в порядке приоритета
       const now = new Date()
-      
+
+      // Build category discount conditions - check if discount category is in product's categories
+      const categoryDiscountConditions = productData.categories.map(cat => ({
+        discountType: 'CATEGORY' as const,
+        category: cat
+      }))
+
       const applicableDiscounts = await prisma.personalDiscount.findMany({
         where: {
           isActive: true,
@@ -89,29 +95,26 @@ export async function POST(request: NextRequest) {
                 // Скидка для конкретного пользователя
                 { userId: currentUser.id },
                 // Скидка для типа пользователей
-                { 
+                {
                   userId: null,
-                  userType: currentUser.userType 
+                  userType: currentUser.userType
                 },
                 // Скидка для всех пользователей
-                { 
+                {
                   userId: null,
-                  userType: null 
+                  userType: null
                 }
               ]
             },
             {
               OR: [
                 // Скидка на конкретный товар
-                { 
+                {
                   discountType: 'PRODUCT',
-                  productId: productId 
+                  productId: productId
                 },
-                // Скидка на категорию
-                { 
-                  discountType: 'CATEGORY',
-                  category: productData.category 
-                },
+                // Скидка на любую из категорий товара
+                ...categoryDiscountConditions,
                 // Скидка на все товары
                 { discountType: 'ALL' }
               ]

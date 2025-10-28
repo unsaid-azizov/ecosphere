@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
               quantity: item.quantity,
               price: product.price,
               productName: product.name,
-              productCategory: product.category,
+              productCategories: product.categories || [],
               productArticle: product.article || product.id,
             },
           });
