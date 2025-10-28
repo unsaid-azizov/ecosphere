@@ -47,7 +47,7 @@ export default async function DiscountsPage() {
     select: {
       id: true,
       name: true,
-      category: true,
+      categories: true,
       article: true
     },
     orderBy: {
@@ -55,8 +55,14 @@ export default async function DiscountsPage() {
     }
   })
 
-  // Get unique categories
-  const categories = Array.from(new Set(products.map(p => p.category))).sort()
+  // Get unique categories from all products
+  const allCategories: string[] = []
+  products.forEach(p => {
+    if (p.categories && Array.isArray(p.categories)) {
+      allCategories.push(...p.categories)
+    }
+  })
+  const categories = Array.from(new Set(allCategories)).sort()
 
   return (
     <AdminLayout userRole={currentUser.role}>
