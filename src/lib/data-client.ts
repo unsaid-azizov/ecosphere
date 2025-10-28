@@ -42,7 +42,10 @@ export function parseCSV(csvContent: string): Product[] {
         const name = values[2] || '';
         const description = values[3] || '';
         const price = parseFloat(values[4]) || 0;
-        const category = values[5] || '';
+        const categoryField = values[5] || '';
+
+        // Parse categories - support both single and multiple categories separated by semicolon
+        const categories = categoryField.split(';').map(c => c.trim()).filter(Boolean);
 
         // Use product index instead of article number for images (start from 0)
         const productImages = getProductImages(products.length);
@@ -54,7 +57,7 @@ export function parseCSV(csvContent: string): Product[] {
             name,
             description,
             price,
-            category,
+            categories,
             images: productImages,
             availability: 'В наличии'
           });
@@ -123,7 +126,7 @@ export const preloadedProducts: Product[] = [
     name: 'Биоразлагаемые пакеты 25x30 см',
     description: 'Экологически чистые пакеты из кукурузного крахмала',
     price: 150,
-    category: 'Упаковочные материалы',
+    categories: ['Упаковочные материалы'],
     images: ['/placeholder-product-1.svg'],
     availability: 'В наличии'
   },
@@ -133,7 +136,7 @@ export const preloadedProducts: Product[] = [
     name: 'Крафт-бумага рулон 60см',
     description: 'Натуральная упаковочная бумага из переработанного сырья',
     price: 280,
-    category: 'Упаковочные материалы',
+    categories: ['Упаковочные материалы'],
     images: ['/placeholder-product-2.svg'],
     availability: 'В наличии'
   },
@@ -143,7 +146,7 @@ export const preloadedProducts: Product[] = [
     name: 'Мыло органическое 100г',
     description: 'Натуральное мыло без химических добавок',
     price: 85,
-    category: 'Гигиена и косметика',
+    categories: ['Гигиена и косметика'],
     images: ['/placeholder-product-3.svg'],
     availability: 'В наличии'
   },
@@ -153,7 +156,7 @@ export const preloadedProducts: Product[] = [
     name: 'Бамбуковая посуда набор',
     description: 'Экологичная альтернатива пластиковой посуде',
     price: 450,
-    category: 'Посуда и принадлежности',
+    categories: ['Посуда и принадлежности'],
     images: ['/placeholder-product-4.svg'],
     availability: 'В наличии'
   },
@@ -163,7 +166,7 @@ export const preloadedProducts: Product[] = [
     name: 'Чистящее средство эко 500мл',
     description: 'Биоразлагаемое универсальное чистящее средство',
     price: 195,
-    category: 'Бытовая химия',
+    categories: ['Бытовая химия'],
     images: ['/placeholder-product-5.svg'],
     availability: 'В наличии'
   },
@@ -173,7 +176,7 @@ export const preloadedProducts: Product[] = [
     name: 'Полотенца из бамбука 6 шт',
     description: 'Антибактериальные полотенца из бамбукового волокна',
     price: 320,
-    category: 'Текстиль',
+    categories: ['Текстиль'],
     images: ['/placeholder-product-6.svg'],
     availability: 'В наличии'
   },
@@ -183,7 +186,7 @@ export const preloadedProducts: Product[] = [
     name: 'Стаканы биоразлагаемые 50 шт',
     description: 'Одноразовые стаканы из растительного сырья',
     price: 125,
-    category: 'Посуда и принадлежности',
+    categories: ['Посуда и принадлежности'],
     images: ['/placeholder-product-7.svg'],
     availability: 'В наличии'
   },
@@ -193,7 +196,7 @@ export const preloadedProducts: Product[] = [
     name: 'Контейнеры для компоста 3л',
     description: 'Контейнеры для органических отходов с фильтром',
     price: 680,
-    category: 'Утилизация отходов',
+    categories: ['Утилизация отходов'],
     images: ['/placeholder-product-8.svg'],
     availability: 'В наличии'
   },
@@ -203,7 +206,7 @@ export const preloadedProducts: Product[] = [
     name: 'Туалетная бумага переработанная 12 рул',
     description: 'Мягкая туалетная бумага из вторичного сырья',
     price: 240,
-    category: 'Гигиена и косметика',
+    categories: ['Гигиена и косметика'],
     images: ['/placeholder-product-9.svg'],
     availability: 'В наличии'
   },
@@ -213,7 +216,7 @@ export const preloadedProducts: Product[] = [
     name: 'Салфетки многоразовые 10 шт',
     description: 'Моющиеся салфетки из органического хлопка',
     price: 180,
-    category: 'Текстиль',
+    categories: ['Текстиль'],
     images: ['/placeholder-product-10.svg'],
     availability: 'В наличии'
   },
@@ -223,7 +226,7 @@ export const preloadedProducts: Product[] = [
     name: 'Освежитель воздуха эфирные масла',
     description: 'Натуральный освежитель на основе эфирных масел',
     price: 290,
-    category: 'Бытовая химия',
+    categories: ['Бытовая химия'],
     images: ['/placeholder-product-11.svg'],
     availability: 'В наличии'
   },
@@ -233,7 +236,7 @@ export const preloadedProducts: Product[] = [
     name: 'Мешки для мусора биоразлагаемые 20л',
     description: 'Прочные мусорные мешки из растительных полимеров',
     price: 165,
-    category: 'Утилизация отходов',
+    categories: ['Утилизация отходов'],
     images: ['/placeholder-product-12.svg'],
     availability: 'В наличии'
   }
