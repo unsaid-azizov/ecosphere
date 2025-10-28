@@ -70,7 +70,7 @@ async function getStats() {
 
       // Популярные товары
       prisma.orderItem.groupBy({
-        by: ['productName', 'productCategory'],
+        by: ['productName', 'productCategories'],
         _sum: {
           quantity: true
         },
@@ -163,7 +163,7 @@ async function getStats() {
       orderChartData,
       popularProducts: popularProducts.map(p => ({
         name: p.productName,
-        category: p.productCategory,
+        categories: p.productCategories,
         quantity: p._sum.quantity || 0
       }))
     }
