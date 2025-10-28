@@ -32,16 +32,16 @@ export async function POST(request: NextRequest) {
       name,
       description,
       price,
-      category,
+      categories,
       stockQuantity,
       isAvailable,
       images
     } = data
 
     // Validation
-    if (!article || !name || !price || !category) {
+    if (!article || !name || !price || !categories || !Array.isArray(categories) || categories.length === 0) {
       return NextResponse.json(
-        { error: 'Обязательные поля: артикул, название, цена, категория' },
+        { error: 'Обязательные поля: артикул, название, цена, категории (массив)' },
         { status: 400 }
       )
     }
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description?.trim() || '',
         price: parseFloat(price),
-        category: category.trim(),
+        categories: categories.map((c: string) => c.trim()).filter(Boolean),
         stockQuantity: parseInt(stockQuantity) || 0,
         isAvailable: isAvailable !== false,
         images: images || []
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
     const where: any = {}
 
     if (category && category !== 'all') {
-      where.category = category
+      where.categories = { has: category }
     }
 
     if (search) {

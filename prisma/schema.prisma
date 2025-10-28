@@ -158,9 +158,9 @@ model OrderItem {
   createdAt DateTime @default(now())
 
   // Информация о товаре на момент заказа
-  productName     String
-  productCategory String
-  productArticle  String
+  productName       String
+  productCategories String[] // Категории товара
+  productArticle    String
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -261,18 +261,18 @@ model Product {
   name        String   // Название товара
   description String?  // Описание товара
   price       Float    // Цена
-  category    String   // Категория
+  categories  String[] // Массив категорий (множественные категории)
   images      String[] // Массив ссылок на изображения
   article     String   // Артикул (может отличаться от id)
-  
+
   // Количество в наличии
   stockQuantity Int      @default(0)
   isAvailable   Boolean  @default(true)
-  
+
   // Метаданные
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@map("products")
 }
 

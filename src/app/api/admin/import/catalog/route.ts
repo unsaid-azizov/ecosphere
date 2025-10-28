@@ -69,11 +69,15 @@ export async function POST(req: NextRequest) {
 
     for (const row of data) {
       try {
+        // Parse categories - support both single and multiple categories separated by semicolon
+        const categoryField = row['Категория'] || row['Категории'] || '';
+        const categories = categoryField.split(';').map((c: string) => c.trim()).filter(Boolean);
+
         const productData = {
           name: row['Название'],
           description: row['Описание'] || null,
           price: parseFloat(row['Цена']),
-          category: row['Категория'],
+          categories: categories,
           article: row['Артикул'],
           stockQuantity: parseInt(row['Количество']) || 0,
           isAvailable: row['Доступен'] === 'Да',
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
         };
 
         // Validate required fields
-        if (!productData.name || !productData.category || !productData.article) {
+        if (!productData.name || !productData.categories.length || !productData.article) {
           skippedCount++;
           errors.push(`Пропущена строка: отсутствуют обязательные поля (Название, Категория или Артикул)`);
           continue;

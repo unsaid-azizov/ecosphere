@@ -43,7 +43,10 @@ export function parseCSV(csvContent: string): Product[] {
         const name = values[2] || '';
         const description = values[3] || '';
         const price = parseFloat(values[4]) || 0;
-        const category = values[5] || '';
+        const categoryField = values[5] || '';
+
+        // Parse categories - support both single and multiple categories separated by semicolon
+        const categories = categoryField.split(';').map(c => c.trim()).filter(Boolean);
 
         // Use product index instead of article number for images (start from 0)
         const productImages = getProductImages(products.length);
@@ -54,7 +57,7 @@ export function parseCSV(csvContent: string): Product[] {
           name,
           description,
           price,
-          category,
+          categories,
           images: productImages
         });
       } else {
@@ -145,7 +148,14 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export function getCategories(products: Product[]): string[] {
-  const categories = [...new Set(products.map(p => p.category))].filter(Boolean);
+  // Flatten all categories from all products and get unique values
+  const allCategories: string[] = [];
+  products.forEach(p => {
+    if (p.categories && Array.isArray(p.categories)) {
+      allCategories.push(...p.categories);
+    }
+  });
+  const categories = [...new Set(allCategories)].filter(Boolean);
   return categories.sort();
 }
 

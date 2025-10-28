@@ -4,7 +4,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  category: string;
+  categories: string[]; // Множественные категории
   images: string[];
   availability?: string; // Для обратной совместимости
   stockQuantity?: number; // Количество на складе

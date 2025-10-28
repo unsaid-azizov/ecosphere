@@ -40,7 +40,7 @@ interface Product {
   name: string
   description?: string
   price: number
-  category: string
+  categories: string[] // Multiple categories
   images: string[]
   article: string
   stockQuantity: number
@@ -83,8 +83,14 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
   const [cleanupResult, setCleanupResult] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Получение уникальных категорий
-  const categories = Array.from(new Set(products.map(p => p.category)))
+  // Получение уникальных категорий из всех товаров
+  const allCategories: string[] = []
+  products.forEach(p => {
+    if (p.categories && Array.isArray(p.categories)) {
+      allCategories.push(...p.categories)
+    }
+  })
+  const categories = Array.from(new Set(allCategories))
 
   // Функция для загрузки дополнительных товаров
   const loadMoreProducts = async () => {
@@ -112,16 +118,16 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.article.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.categories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase())) ||
       product.id.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesCategory = categoryFilter === 'ALL' || product.category === categoryFilter
-    
-    const matchesAvailability = availabilityFilter === 'ALL' || 
+
+    const matchesCategory = categoryFilter === 'ALL' || product.categories.includes(categoryFilter)
+
+    const matchesAvailability = availabilityFilter === 'ALL' ||
       (availabilityFilter === 'AVAILABLE' && product.isAvailable) ||
       (availabilityFilter === 'UNAVAILABLE' && !product.isAvailable) ||
       (availabilityFilter === 'LOW_STOCK' && product.stockQuantity <= 5)
-    
+
     return matchesSearch && matchesCategory && matchesAvailability
   })
 
@@ -249,7 +255,7 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
       name: '',
       description: '',
       price: 0,
-      category: '',
+      categories: [],
       article: '',
       stockQuantity: 0,
       isAvailable: true,
@@ -559,7 +565,11 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
                       {product.article}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{product.category}</Badge>
+                      <div className="flex flex-wrap gap-1">
+                        {product.categories.map((cat, idx) => (
+                          <Badge key={idx} variant="outline">{cat}</Badge>
+                        ))}
+                      </div>
                     </TableCell>
                     <TableCell className="font-medium">
                       ₽{product.price.toLocaleString()}
@@ -734,30 +744,71 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
                   </div>
 
                   <div>
-                    <Label htmlFor="product-category">Категория *</Label>
+                    <Label htmlFor="product-categories">Категории *</Label>
                     {isEditMode ? (
-                      <div className="flex gap-2">
-                        <Select
-                          value={editingProduct?.category || ''}
-                          onValueChange={(value) => updateEditingProduct('category', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите категорию" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map(cat => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="Или новая категория"
-                          onChange={(e) => updateEditingProduct('category', e.target.value)}
-                        />
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          {editingProduct?.categories && editingProduct.categories.length > 0 ? (
+                            editingProduct.categories.map((cat, idx) => (
+                              <Badge key={idx} variant="outline" className="gap-1">
+                                {cat}
+                                <button
+                                  onClick={() => {
+                                    const newCategories = [...(editingProduct.categories || [])]
+                                    newCategories.splice(idx, 1)
+                                    updateEditingProduct('categories', newCategories)
+                                  }}
+                                  className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-500">Добавьте категории</span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Select
+                            value=""
+                            onValueChange={(value) => {
+                              const currentCategories = editingProduct?.categories || []
+                              if (!currentCategories.includes(value)) {
+                                updateEditingProduct('categories', [...currentCategories, value])
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Добавить существующую" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map(cat => (
+                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder="Или новую категорию"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                                const newCategory = e.currentTarget.value.trim()
+                                const currentCategories = editingProduct?.categories || []
+                                if (!currentCategories.includes(newCategory)) {
+                                  updateEditingProduct('categories', [...currentCategories, newCategory])
+                                }
+                                e.currentTarget.value = ''
+                              }
+                            }}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <div className="p-2 bg-gray-50 rounded-md">
-                        <Badge variant="outline">{selectedProduct?.category}</Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedProduct?.categories.map((cat, idx) => (
+                            <Badge key={idx} variant="outline">{cat}</Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -919,9 +970,9 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
                 <X className="h-4 w-4 mr-2" />
                 Отмена
               </Button>
-              <Button 
+              <Button
                 onClick={() => saveProduct(false)}
-                disabled={loading || !editingProduct?.name || !editingProduct?.article || !editingProduct?.category}
+                disabled={loading || !editingProduct?.name || !editingProduct?.article || !editingProduct?.categories?.length}
                 className="bg-emerald-500 hover:bg-emerald-600"
               >
                 {loading ? (
@@ -980,25 +1031,62 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
                   </div>
 
                   <div>
-                    <Label htmlFor="new-product-category">Категория *</Label>
-                    <div className="flex gap-2">
-                      <Select
-                        value={editingProduct.category || ''}
-                        onValueChange={(value) => updateEditingProduct('category', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите категорию" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map(cat => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        placeholder="Или новая категория"
-                        onChange={(e) => updateEditingProduct('category', e.target.value)}
-                      />
+                    <Label htmlFor="new-product-categories">Категории *</Label>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {editingProduct.categories && editingProduct.categories.length > 0 ? (
+                          editingProduct.categories.map((cat, idx) => (
+                            <Badge key={idx} variant="outline" className="gap-1">
+                              {cat}
+                              <button
+                                onClick={() => {
+                                  const newCategories = [...(editingProduct.categories || [])]
+                                  newCategories.splice(idx, 1)
+                                  updateEditingProduct('categories', newCategories)
+                                }}
+                                className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-500">Добавьте категории</span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Select
+                          value=""
+                          onValueChange={(value) => {
+                            const currentCategories = editingProduct.categories || []
+                            if (!currentCategories.includes(value)) {
+                              updateEditingProduct('categories', [...currentCategories, value])
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Добавить существующую" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map(cat => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          placeholder="Или новую категорию"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                              const newCategory = e.currentTarget.value.trim()
+                              const currentCategories = editingProduct.categories || []
+                              if (!currentCategories.includes(newCategory)) {
+                                updateEditingProduct('categories', [...currentCategories, newCategory])
+                              }
+                              e.currentTarget.value = ''
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1089,9 +1177,9 @@ export function ProductsTable({ initialProducts, stats, totalCount }: ProductsTa
               <X className="h-4 w-4 mr-2" />
               Отмена
             </Button>
-            <Button 
+            <Button
               onClick={() => saveProduct(true)}
-              disabled={loading || !editingProduct?.name || !editingProduct?.article || !editingProduct?.category}
+              disabled={loading || !editingProduct?.name || !editingProduct?.article || !editingProduct?.categories?.length}
               className="bg-emerald-500 hover:bg-emerald-600"
             >
               {loading ? (

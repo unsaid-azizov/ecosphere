@@ -39,16 +39,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       name,
       description,
       price,
-      category,
+      categories,
       stockQuantity,
       isAvailable,
       images
     } = data
 
     // Validation
-    if (!article || !name || !price || !category) {
+    if (!article || !name || !price || !categories || !Array.isArray(categories) || categories.length === 0) {
       return NextResponse.json(
-        { error: 'Обязательные поля: артикул, название, цена, категория' },
+        { error: 'Обязательные поля: артикул, название, цена, категории (массив)' },
         { status: 400 }
       )
     }
@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         name: name.trim(),
         description: description?.trim() || '',
         price: parseFloat(price),
-        category: category.trim(),
+        categories: categories.map((c: string) => c.trim()).filter(Boolean),
         stockQuantity: parseInt(stockQuantity) || 0,
         isAvailable: isAvailable !== false,
         images: images || [],
