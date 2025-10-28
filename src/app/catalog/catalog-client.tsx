@@ -113,7 +113,7 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
           'Артикул': product.article,
           'Название': product.name,
           'Описание': product.description || '',
-          'Категория': product.category,
+          'Категории': product.categories.join('; '),
           'Цена': product.price,
           'Скидка %': discount?.discountPercent || 0,
           'Цена со скидкой': finalPrice,

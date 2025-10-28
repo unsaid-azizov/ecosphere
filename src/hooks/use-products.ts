@@ -85,7 +85,13 @@ export function useProducts({ initialProducts = [] }: UseProductsOptions = {}) {
   });
 
   const categories = useMemo(() => {
-    const categorySet = new Set(products.map(p => p.category).filter(Boolean));
+    const allCategories: string[] = [];
+    products.forEach(p => {
+      if (p.categories && Array.isArray(p.categories)) {
+        allCategories.push(...p.categories);
+      }
+    });
+    const categorySet = new Set(allCategories.filter(Boolean));
     return Array.from(categorySet).sort();
   }, [products]);
 
@@ -104,8 +110,8 @@ export function useProducts({ initialProducts = [] }: UseProductsOptions = {}) {
         product.description.toLowerCase().includes(filters.search.toLowerCase()) ||
         product.article.toLowerCase().includes(filters.search.toLowerCase());
 
-      const matchesCategory = filters.categories.length === 0 || 
-        filters.categories.includes(product.category);
+      const matchesCategory = filters.categories.length === 0 ||
+        product.categories.some(cat => filters.categories.includes(cat));
 
       const matchesPrice = product.price >= filters.priceRange[0] && 
         product.price <= filters.priceRange[1];

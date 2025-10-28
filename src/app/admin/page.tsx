@@ -325,7 +325,7 @@ export default async function AdminDashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">{product.name}</p>
-                        <p className="text-xs text-gray-600">{product.category}</p>
+                        <p className="text-xs text-gray-600">{product.categories.join(', ')}</p>
                       </div>
                     </div>
                     <div className="text-right">
