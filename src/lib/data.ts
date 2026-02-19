@@ -96,44 +96,27 @@ function parseCSVLine(line: string): string[] {
 }
 
 function getProductImages(index: number): string[] {
-  // Use sequential product index (1, 2, 3...) with 8-digit format
-  const formattedNumber = index.toString().padStart(8, '0');
-  const basePath = `/data/images/product_${formattedNumber}`;
-  const publicPath = path.join(process.cwd(), 'public', 'data', 'images', `product_${formattedNumber}`);
-  
+  const productId = index + 1;
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'products');
+
   const images: string[] = [];
-  
+
   try {
-    // Check if the product folder exists
-    if (fs.existsSync(publicPath)) {
-      // Read all files in the directory
-      const files = fs.readdirSync(publicPath);
-      
-      // Filter for image files (.jpg, .jpeg, .png, .webp) and sort them
-      const imageFiles = files
-        .filter(file => /\.(jpg|jpeg|png|webp)$/i.test(file))
-        .sort((a, b) => {
-          // Sort by numeric value if filename is a number
-          const aNum = parseInt(a.split('.')[0]);
-          const bNum = parseInt(b.split('.')[0]);
-          if (!isNaN(aNum) && !isNaN(bNum)) {
-            return aNum - bNum;
-          }
-          // Otherwise sort alphabetically
-          return a.localeCompare(b);
-        });
-      
-      // Convert to full paths
-      imageFiles.forEach(file => {
-        images.push(`${basePath}/${file}`);
-      });
+    if (fs.existsSync(uploadsDir)) {
+      const prefix = `product_${productId}_`;
+      const files = fs.readdirSync(uploadsDir)
+        .filter(f => f.startsWith(prefix) && /\.(jpg|jpeg|png|webp)$/i.test(f))
+        .sort();
+
+      for (const file of files) {
+        images.push(`/uploads/products/${file}`);
+      }
     }
   } catch (error) {
-    console.log(`Error checking images for product ${formattedNumber}:`, error);
+    console.log(`Error checking images for product ${productId}:`, error);
   }
-  
-  // If no images found, return default
-  return images.length > 0 ? images : [`${basePath}/1.jpg`];
+
+  return images.length > 0 ? images : [`/uploads/products/product_${productId}_1.jpg`];
 }
 
 export async function getProducts(): Promise<Product[]> {

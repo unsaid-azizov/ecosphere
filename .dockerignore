@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env
+*.md
+!README.md
+output.log
+ecosphere_backup.sql
+ecosphere_schema.sql

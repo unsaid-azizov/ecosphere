@@ -1,6 +1,10 @@
 /node_modules
 /dist
 /build
-/public
+/.next
 .env
-.next
+
+# Public generated content (built from data/images/ at docker build time)
+/public/uploads
+/public/data
+/public/icon.webp

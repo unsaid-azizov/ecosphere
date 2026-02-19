@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   images: {
     unoptimized: true,
     domains: ['localhost'],
   },
-  // Увеличиваем лимит для загрузки файлов до 10MB
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',

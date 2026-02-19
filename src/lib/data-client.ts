@@ -108,14 +108,8 @@ export function parseCSVLine(line: string): string[] {
 }
 
 export function getProductImages(index: number): string[] {
-  // Используем реальные изображения из папки public/data/images
-  const productNumbers = [
-    '00000367', '00000103', '00000043', '00000295', '00000389', '00000172',
-    '00000340', '00000020', '00000108', '00000235', '00000312', '00000142'
-  ];
-  
-  const productNumber = productNumbers[index % productNumbers.length];
-  return [`/data/images/product_${productNumber}/1.jpg`];
+  const productId = index + 1;
+  return [`/uploads/products/product_${productId}_1.jpg`];
 }
 
 // Предзагруженные продукты для клиентской стороны

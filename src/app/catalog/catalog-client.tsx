@@ -3,7 +3,6 @@
 import { CatalogFilters } from '@/components/catalog-filters';
 import { CategorySidebar } from '@/components/category-sidebar';
 import { ProductCard } from '@/components/product-card';
-import { BannerCarousel } from '@/components/banner-carousel';
 import { useProducts } from '@/hooks/use-products';
 import { type ServerDiscountResult } from '@/lib/server-discounts';
 import { Button } from '@/components/ui/button';
@@ -157,8 +156,6 @@ export function CatalogClient({ discounts }: CatalogClientProps) {
 
   return (
     <div className="space-y-8">
-      <BannerCarousel />
-      
       <div className="lg:grid lg:grid-cols-[320px_1fr] lg:gap-8 flex flex-col gap-8">
         {/* Sidebar с категориями */}
         <div>
