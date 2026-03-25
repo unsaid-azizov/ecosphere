@@ -81,6 +81,32 @@ npx prisma db push
 npm run dev
 ```
 
+## Coolify Deployment (GHCR image)
+
+The `docker-compose.coolify.yml` pulls the pre-built image from GHCR instead of building locally.
+GitHub Actions builds and pushes the image on every push to `main`.
+
+**First-time setup:**
+
+1. Add environment variables in Coolify (see table above), with `NEXTAUTH_URL` and `NEXT_PUBLIC_BASE_URL` set to your domain.
+2. Deploy the service.
+3. If the database is empty (tables missing), restore from the backup:
+
+```bash
+# Copy backup to server (run locally)
+scp docker/db/init.sql root@<server-ip>:/root/init.sql
+
+# Restore into the running db container (run on server)
+docker exec -i <db-container-name> psql -U ecosphere_user -d ecosphere < /root/init.sql
+```
+
+> Note: Postgres only auto-runs `init.sql` on a completely fresh (empty) volume.
+> If the volume already exists, restore manually using the command above.
+
+**Redeploying with a new image:**
+
+Coolify will pull the latest image automatically on redeploy. No manual steps needed unless the database schema changed (run `npx prisma migrate deploy` in the app container if so).
+
 ## Tech Stack
 
 - **Frontend:** Next.js 14, React 18, Tailwind CSS, shadcn/ui, Radix UI
